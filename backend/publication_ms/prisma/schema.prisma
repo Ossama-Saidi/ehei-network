@@ -1,0 +1,159 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Publications {
+  id_publication    Int      @id @default(autoincrement())
+  id_user           Int
+  id_group          Int?
+  description       String @db.Text
+  date_publication  DateTime
+  image             String?
+  video             String?
+  tags              String?
+  audience          Audience
+
+  id_ville        Int?
+  id_entreprise   Int?
+  id_type_emploi  Int?
+  id_technologie  Int?
+
+  ville           Ville?       @relation(fields: [id_ville], references: [id_ville])
+  entreprise      Entreprise?  @relation(fields: [id_entreprise], references: [id_entreprise])
+  typeEmploi      TypeEmploi?  @relation(fields: [id_type_emploi], references: [id_type_emploi])
+  technologie     Technologie? @relation(fields: [id_technologie], references: [id_technologie])
+
+  publicationSaves           PublicationSaves[]
+  publicationArchivesByAdmin PublicationArchivesByAdmin[]
+  shares                     Shares[]
+  reactions                  Reactions[]
+  comments                   Comments[]
+  publicationHides           PublicationHides[]
+}
+
+model Emoji {
+  id_emoji Int     @id @default(autoincrement())
+  unicode  String
+  name     String
+  category String
+}
+
+model Ville {
+  id_ville Int @id @default(autoincrement())
+  nom      String
+  publications Publications[]
+}
+
+model Technologie {
+  id_technologie Int @id @default(autoincrement())
+  nom           String
+  publications Publications[]
+}
+
+model Entreprise {
+  id_entreprise Int @id @default(autoincrement())
+  nom           String
+  publications  Publications[]
+}
+
+model TypeEmploi {
+  id_type_emploi Int @id @default(autoincrement())
+  type            String
+  publications    Publications[]
+}
+
+
+model PublicationSaves {
+  id_save        Int      @id @default(autoincrement())
+  id_user        Int
+  id_publication Int
+  
+  // Relations
+  publication    Publications @relation(fields: [id_publication], references: [id_publication])
+
+  @@index([id_user])
+  @@index([id_publication])
+}
+
+model PublicationArchivesByAdmin {
+  id_archive     Int      @id @default(autoincrement())
+  id_user        Int
+  id_publication Int
+  
+  // Relations
+  publication    Publications @relation(fields: [id_publication], references: [id_publication])
+
+  @@index([id_user])
+  @@index([id_publication])
+}
+
+model Shares {
+  id_share       Int      @id @default(autoincrement())
+  id_publication Int
+  id_user        Int
+  
+  // Relations
+  publication    Publications @relation(fields: [id_publication], references: [id_publication])
+
+  @@index([id_user])
+  @@index([id_publication])
+}
+
+model Reactions {
+  id_reaction    Int      @id @default(autoincrement())
+  id_publication Int
+  id_user        Int
+  reaction       Reaction
+  
+  // Relations
+  publication    Publications @relation(fields: [id_publication], references: [id_publication])
+
+  @@index([id_user])
+  @@index([id_publication])
+}
+
+model Comments {
+  id_comment     Int      @id @default(autoincrement())
+  id_user        Int
+  id_publication Int
+  contenu        String   @db.Text
+  date_comment   DateTime
+  
+  // Relations
+  publication    Publications @relation(fields: [id_publication], references: [id_publication])
+
+  @@index([id_user])
+  @@index([id_publication])
+}
+
+model PublicationHides {
+  id_hide        Int      @id @default(autoincrement())
+  id_user        Int
+  id_publication Int
+  
+  // Relations
+  publication    Publications @relation(fields: [id_publication], references: [id_publication], onDelete: Cascade)
+
+  @@index([id_user])
+  @@index([id_publication])
+}
+
+enum Audience {
+  Public
+  Friends
+  Only_me
+}
+
+enum Reaction {
+  Like
+  Love
+  Haha
+}
