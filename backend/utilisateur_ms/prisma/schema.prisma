@@ -1,0 +1,89 @@
+// This is your Prisma schema file, learn more about it at: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Utilisateur {
+  id            Int         @id @default(autoincrement())
+  nom           String
+  prenom        String
+  telephone     String
+  email         String      @unique
+  password      String
+  badge         Boolean     @default(false)
+  role          Role
+  status        AccountStatus @default(enabled)  // Add this line
+  bio           String?
+  profilePhoto  String?
+  bannerPhoto   String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  etudiant      Etudiant?   @relation("UtilisateurEtudiant")
+  professeur    Professeur? @relation("UtilisateurProfesseur")
+  friendshipsAsSender   Friendship[] @relation("FriendshipSender")
+  friendshipsAsReceiver Friendship[] @relation("FriendshipReceiver")
+}
+
+model Etudiant {
+  id              Int         @id @default(autoincrement())
+  utilisateurId   Int         @unique
+  utilisateur     Utilisateur @relation(fields: [utilisateurId], references: [id], name: "UtilisateurEtudiant")
+  filiere         String
+  groupe          String
+  interets        String
+  carteEtudiantId String      @unique
+  carteEtudiantQr String
+}
+
+model Professeur {
+  id              Int         @id @default(autoincrement())
+  utilisateurId   Int         @unique
+  utilisateur     Utilisateur @relation(fields: [utilisateurId], references: [id], name: "UtilisateurProfesseur")
+  permissionsTags String
+  interets        String
+}
+
+model Administrateur {
+  id          Int     @id @default(autoincrement())
+  nom         String
+  password    String?
+  email       String  @unique
+  telephone   String
+  permissions String
+  role        Role    @default(ADMINISTRATEUR)
+}
+
+enum Role {
+  ETUDIANT
+  PROFESSEUR
+  ADMINISTRATEUR
+}
+
+model Friendship {
+  id         Int               @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  status     FriendshipStatus
+  sender     Utilisateur       @relation("FriendshipSender", fields: [senderId], references: [id])
+  receiver   Utilisateur       @relation("FriendshipReceiver", fields: [receiverId], references: [id])
+
+  @@unique([senderId, receiverId]) // Ensure unique relationship between sender and receiver
+}
+
+enum FriendshipStatus {
+  pending
+  accepted
+  blocked
+  rejected
+}
+
+enum AccountStatus {
+  enabled
+  disabled
+}
