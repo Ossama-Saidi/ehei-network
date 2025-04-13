@@ -63,7 +63,17 @@ export class UserService {
      * @param userId - User ID
      * @param updateData - Data to update user profile
      */
+// <<<<<<< HEAD
 
+// =======
+// <<<<<<< HEAD
+//     async modify(userId: number, updateData: ModifyUserDto) {
+//       return this.prisma.utilisateur.update(
+//         { where: { id: userId }, 
+//           data: updateData }
+//       );
+// =======
+// >>>>>>> 1ee5433 (Sauvegarde temporaire avant rebase)
     async updateUser(userId: number, updateData: ModifyUserDto) {
       await this.prisma.utilisateur.update({ 
         where: { id: userId }, 
@@ -80,6 +90,10 @@ export class UserService {
         // Include any other user fields needed by the publication service
       });      
       return updatedUser;
+<<<<<<< HEAD
+=======
+>>>>>>> bdc4a9d63365d840ca136bcfbf2637c0e887401e
+>>>>>>> 1ee5433 (Sauvegarde temporaire avant rebase)
     }
   /**
    * Update user by ID
