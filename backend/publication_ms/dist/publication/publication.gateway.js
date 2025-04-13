@@ -18,13 +18,22 @@ const socket_io_1 = require("socket.io");
 const common_1 = require("@nestjs/common");
 const publication_service_1 = require("./publication.service");
 const create_publication_dto_1 = require("./dto/create-publication.dto");
+const jwt_1 = require("@nestjs/jwt");
 let PublicationGateway = class PublicationGateway {
-    constructor(publicationService) {
+    constructor(publicationService, jwtService) {
         this.publicationService = publicationService;
+        this.jwtService = jwtService;
     }
     async handleCreatePublication(createPublicationDto, client) {
         try {
-            const publication = await this.publicationService.createPublication(createPublicationDto);
+            const token = client.handshake.headers.authorization?.split(' ')[1];
+            if (!token) {
+                client.emit('publicationError', { message: 'Unauthorized: No token' });
+                return;
+            }
+            const decoded = this.jwtService.verify(token);
+            const userId = decoded.sub;
+            const publication = await this.publicationService.createPublication(createPublicationDto, userId);
             client.broadcast.emit('newPublication', publication);
         }
         catch (error) {
@@ -50,6 +59,7 @@ __decorate([
 exports.PublicationGateway = PublicationGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({ cors: true }),
     __param(0, (0, common_1.Inject)((0, common_1.forwardRef)(() => publication_service_1.PublicationService))),
-    __metadata("design:paramtypes", [publication_service_1.PublicationService])
+    __metadata("design:paramtypes", [publication_service_1.PublicationService,
+        jwt_1.JwtService])
 ], PublicationGateway);
 //# sourceMappingURL=publication.gateway.js.map

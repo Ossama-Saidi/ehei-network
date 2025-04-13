@@ -8,8 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import PrivacySelector from '@/components/PrivacySelector';
 import { X, Users, CloudUpload, Loader2 } from 'lucide-react'; // ou les icônes équivalentes
-import { CityButton, CompanyButton, EmploiButton, TechButton } from "@/components/SearchPopover";
-import { EmojiButton } from "@/components/EmojiPopover";
+import { CityButton, CompanyButton, EmploiButton, TechButton } from "@/components/buttons/SearchPopover";
+import { EmojiButton } from "@/components/buttons/EmojiPopover";
 import { toast } from 'sonner';
 
 

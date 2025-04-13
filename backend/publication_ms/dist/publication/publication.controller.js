@@ -19,19 +19,24 @@ const create_publication_dto_1 = require("./dto/create-publication.dto");
 const nest_file_fastify_1 = require("@blazity/nest-file-fastify");
 const fs = require("fs");
 const path = require("path");
+const auth_guard_1 = require("../auth/auth.guard");
+const user_decorator_1 = require("../auth/user.decorator");
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
 let PublicationController = class PublicationController {
     constructor(publicationService) {
         this.publicationService = publicationService;
     }
-    async create(createPublicationDto) {
+    async create(createPublicationDto, user) {
         try {
             console.log(createPublicationDto);
-            return await this.publicationService.createPublication(createPublicationDto);
+            return await this.publicationService.createPublication(createPublicationDto, user.sub);
         }
         catch (error) {
             throw new common_1.HttpException('Failed to create publication.', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        finally {
+            console.log(`Publication créée par l'utilisateur: ${user.email} ${user.sub}`);
         }
     }
     async uploadImage(files) {
@@ -238,9 +243,11 @@ let PublicationController = class PublicationController {
 exports.PublicationController = PublicationController;
 __decorate([
     (0, common_1.Post)(),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_publication_dto_1.CreatePublicationDto]),
+    __metadata("design:paramtypes", [create_publication_dto_1.CreatePublicationDto, Object]),
     __metadata("design:returntype", Promise)
 ], PublicationController.prototype, "create", null);
 __decorate([

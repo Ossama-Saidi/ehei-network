@@ -7,11 +7,31 @@ import { FileInterceptor } from '@nestjs/platform-express/multer';
 import { JwtAuthGuard } from 'src/auth/JWT/jwt-auth.guard';
 import { AuthService } from 'src/auth/auth.service';
 import * as jwt from 'jsonwebtoken';
+import { MessagePattern } from '@nestjs/microservices';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+  /**
+   * Get all users
+   */
+    // Handle the request to get all users
+  @MessagePattern({ cmd: 'get_all_users' })
+  async getAllUsersToCache() {
+    console.log('[USER_SERVICE] 🔐 Received get_all_users request');
+    const users = await this.userService.getAllUsers();
+    console.log('[USER_SERVICE] ✅ Sending all users');
+    // Return only the necessary user fields for the publication service
+    return users;
+  }
 
+  @Get()
+  @UseGuards(AuthGuard('jwt'))
+  //------------------------ add getAllUsers for group -----------------------------------
+  async getAllUsers() {
+    return this.userService.getAllUsers();
+  }
+  //----------------------------------------------------------------------------------------
   /**
    * Get user profile
    * @param req - Request object containing user information
@@ -53,8 +73,8 @@ export class UserController {
     return { success: true, data: user };
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Put('profil')
+  @UseGuards(AuthGuard('jwt'))
   async updateProfile(@Req() req, @Body() updateUserDto: ModifyUserDto) {
     //console.log('Request received:', req.user);
     //console.log('Update data:', updateUserDto);
@@ -70,15 +90,6 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   async getUser(@Param('email') email: string) {
     return this.userService.getUserByEmail(email);
-  }
-
-  /**
-   * Get all users
-   */
-  @Get()
-  @UseGuards(AuthGuard('jwt'))
-  async getAllUsers() {
-    return this.userService.getAllUsers();
   }
 
   @Put('modify')

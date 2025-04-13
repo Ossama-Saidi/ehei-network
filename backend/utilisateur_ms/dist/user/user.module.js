@@ -70,14 +70,18 @@ exports.UserModule = UserModule = __decorate([
             platform_express_1.MulterModule.register({
                 dest: './uploads',
             }),
-            prisma_module_1.PrismaModule,
-            config_1.ConfigModule.forRoot({ isGlobal: true }),
-            passport_1.PassportModule.register({ defaultStrategy: 'jwt' }),
-            jwt_1.JwtModule.register({
-                secret: process.env.JWT_SECRET,
-                signOptions: { expiresIn: '2h' },
-            }),
             microservices_1.ClientsModule.register([
+                {
+                    name: 'PUBLICATION_EVENTS_SERVICE',
+                    transport: microservices_1.Transport.RMQ,
+                    options: {
+                        urls: ['amqp://user:password@localhost:5672'],
+                        queue: 'user_events_queue',
+                        queueOptions: {
+                            durable: true,
+                        },
+                    },
+                },
                 {
                     name: 'GROUP_SERVICE',
                     transport: microservices_1.Transport.TCP,
@@ -87,6 +91,13 @@ exports.UserModule = UserModule = __decorate([
                     },
                 },
             ]),
+            prisma_module_1.PrismaModule,
+            config_1.ConfigModule.forRoot({ isGlobal: true }),
+            passport_1.PassportModule.register({ defaultStrategy: 'jwt' }),
+            jwt_1.JwtModule.register({
+                secret: process.env.JWT_SECRET,
+                signOptions: { expiresIn: '2h' },
+            }),
         ],
         controllers: [user_controller_1.UserController],
         providers: [user_service_1.UserService, jwt_strategy_1.JwtStrategy, prisma_service_1.PrismaService, FileUploadService_1.FileUploadService],

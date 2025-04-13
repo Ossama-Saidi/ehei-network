@@ -49,14 +49,17 @@ async function bootstrap() {
         next();
     });
     app.connectMicroservice({
-        transport: microservices_1.Transport.TCP,
+        transport: microservices_1.Transport.RMQ,
         options: {
-            host: '0.0.0.0',
-            port: microservicePort,
+            urls: ['amqp://user:password@localhost:5672'],
+            queue: 'user_events_queue',
+            queueOptions: {
+                durable: true
+            },
         },
     });
-    await app.startAllMicroservices();
     await app.listen(port, '0.0.0.0');
+    await app.startAllMicroservices();
     console.log(`PUB-SERVICE running on ports: HTTP ${port}, Microservice ${microservicePort}`);
 }
 bootstrap();

@@ -14,6 +14,7 @@ const app_service_1 = require("./app.service");
 const publication_module_1 = require("./publication/publication.module");
 const prisma_module_1 = require("./prisma/prisma.module");
 const publication_saves_module_1 = require("./publication-saves/publication-saves.module");
+const users_module_1 = require("./users/users.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -25,6 +26,7 @@ exports.AppModule = AppModule = __decorate([
             }),
             publication_module_1.PublicationModule,
             prisma_module_1.PrismaModule,
+            users_module_1.UsersModule,
             publication_saves_module_1.PublicationSavesModule,
         ],
         controllers: [app_controller_1.AppController],

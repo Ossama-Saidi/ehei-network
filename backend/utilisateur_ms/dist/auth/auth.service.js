@@ -41,26 +41,36 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const jwt_1 = require("@nestjs/jwt");
 const bcrypt = __importStar(require("bcrypt"));
-const jwt = __importStar(require("jsonwebtoken"));
+const microservices_1 = require("@nestjs/microservices");
+const common_2 = require("@nestjs/common");
 let AuthService = class AuthService {
-    decodeToken(token) {
-        try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            return decoded.sub;
-        }
-        catch (error) {
-            throw new Error('Method not implemented.');
-        }
-    }
-    constructor(prisma, jwtService) {
+    constructor(prisma, jwtService, userEventsClient) {
         this.prisma = prisma;
         this.jwtService = jwtService;
+        this.userEventsClient = userEventsClient;
+    }
+    async verifyToken(token) {
+        console.log('[USER_SERVICE] ➡️ Inside verifyToken method');
+        try {
+            const decoded = await this.jwtService.verifyAsync(token, {
+                secret: process.env.JWT_SECRET
+            });
+            console.log('[USER_SERVICE] ✅ Token verified', decoded);
+            return { isValid: true, user: decoded };
+        }
+        catch (error) {
+            console.log('[USER_SERVICE] ❌ Token verification failed:', error.message);
+            return { isValid: false, error: error.message };
+        }
     }
     async register(data) {
         const existingUser = await this.prisma.utilisateur.findUnique({ where: { email: data.email } });
@@ -70,7 +80,15 @@ let AuthService = class AuthService {
         const user = await this.prisma.utilisateur.create({
             data: { ...data, password: hashedPassword },
         });
-        return { user, token: this.generateToken(user) };
+        const token = this.generateToken(user);
+        this.userEventsClient.emit('user_created', {
+            id: user.id,
+            email: user.email,
+            nom: user.nom,
+            prenom: user.prenom,
+            role: user.role,
+        });
+        return { user, token };
     }
     async login(email, password) {
         const user = await this.prisma.utilisateur.findUnique({ where: { email } });
@@ -80,13 +98,22 @@ let AuthService = class AuthService {
         return { user, token: this.generateToken(user) };
     }
     generateToken(user) {
-        return this.jwtService.sign({ sub: user.id, email: user.email, role: user.role });
+        return this.jwtService.sign({
+            sub: user.id,
+            email: user.email,
+            role: user.role,
+            nomComplet: `${user.nom} ${user.prenom}`,
+            nom: user.nom,
+            prenom: user.prenom
+        });
     }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
+    __param(2, (0, common_2.Inject)('PUBLICATION_EVENTS_SERVICE')),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        microservices_1.ClientProxy])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

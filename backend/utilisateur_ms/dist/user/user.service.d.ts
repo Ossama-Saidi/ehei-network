@@ -1,9 +1,11 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { ModifyUserDto } from 'src/auth/dto/auth.dto';
+import { ClientProxy } from '@nestjs/microservices';
 export declare class UserService {
     private readonly prisma;
+    private readonly userEventsClient;
     fileUploadService: any;
-    constructor(prisma: PrismaService);
+    constructor(prisma: PrismaService, userEventsClient: ClientProxy);
     getUserByEmail(email: string): Promise<{
         id: number;
         nom: string;
@@ -36,7 +38,18 @@ export declare class UserService {
         createdAt: Date;
         updatedAt: Date;
     }[]>;
-    updateUser(userId: number, updateUserDto: ModifyUserDto): Promise<{
+    getUserById(userId: number): Promise<{
+        id: number;
+        nom: string;
+        prenom: string;
+        telephone: string;
+        email: string;
+        role: import("@prisma/client").$Enums.Role;
+        bio: string;
+        profilePhoto: string;
+        bannerPhoto: string;
+    }>;
+    updateUser(userId: number, updateData: ModifyUserDto): Promise<{
         id: number;
         nom: string;
         prenom: string;
@@ -51,17 +64,6 @@ export declare class UserService {
         bannerPhoto: string | null;
         createdAt: Date;
         updatedAt: Date;
-    }>;
-    getUserById(userId: number): Promise<{
-        id: number;
-        nom: string;
-        prenom: string;
-        telephone: string;
-        email: string;
-        role: import("@prisma/client").$Enums.Role;
-        bio: string;
-        profilePhoto: string;
-        bannerPhoto: string;
     }>;
     modify(userId: number, updateData: ModifyUserDto): Promise<{
         id: number;

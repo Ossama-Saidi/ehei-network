@@ -14,23 +14,36 @@ const jwt_1 = require("@nestjs/jwt");
 const prisma_module_1 = require("../prisma/prisma.module");
 const passport_1 = require("@nestjs/passport");
 const jwt_strategy_1 = require("./JWT/jwt.strategy");
+const microservices_1 = require("@nestjs/microservices");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
 exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            AuthModule,
+            microservices_1.ClientsModule.register([
+                {
+                    name: 'PUBLICATION_EVENTS_SERVICE',
+                    transport: microservices_1.Transport.RMQ,
+                    options: {
+                        urls: ['amqp://user:password@localhost:5672'],
+                        queue: 'user_events_queue',
+                        queueOptions: {
+                            durable: true,
+                        },
+                    },
+                },
+            ]),
             passport_1.PassportModule,
             prisma_module_1.PrismaModule,
             jwt_1.JwtModule.register({
                 secret: process.env.JWT_SECRET || 'default_secret',
-                signOptions: { expiresIn: '2h' },
+                signOptions: { expiresIn: '24h' },
             }),
         ],
         controllers: [auth_controller_1.AuthController],
         providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy],
-        exports: [auth_service_1.AuthService],
+        exports: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy],
     })
 ], AuthModule);
 //# sourceMappingURL=auth.module.js.map

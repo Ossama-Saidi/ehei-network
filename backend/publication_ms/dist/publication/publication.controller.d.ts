@@ -5,14 +5,14 @@ import { Audience } from '@prisma/client';
 export declare class PublicationController {
     private readonly publicationService;
     constructor(publicationService: PublicationService);
-    create(createPublicationDto: CreatePublicationDto): Promise<{
-        id_user: number;
+    create(createPublicationDto: CreatePublicationDto, user: any): Promise<{
         description: string;
         tags: string | null;
         image: string | null;
         video: string | null;
         audience: import("@prisma/client").$Enums.Audience;
         id_publication: number;
+        id_user: number;
         id_group: number | null;
         date_publication: Date;
         id_ville: number | null;
@@ -43,13 +43,13 @@ export declare class PublicationController {
         files?: undefined;
     }>;
     consulterPublications(): Promise<{
-        id_user: number;
         description: string;
         tags: string | null;
         image: string | null;
         video: string | null;
         audience: import("@prisma/client").$Enums.Audience;
         id_publication: number;
+        id_user: number;
         id_group: number | null;
         date_publication: Date;
         id_ville: number | null;
@@ -58,13 +58,13 @@ export declare class PublicationController {
         id_technologie: number | null;
     }[]>;
     consulterPublication(id_publication: string): Promise<{
-        id_user: number;
         description: string;
         tags: string | null;
         image: string | null;
         video: string | null;
         audience: import("@prisma/client").$Enums.Audience;
         id_publication: number;
+        id_user: number;
         id_group: number | null;
         date_publication: Date;
         id_ville: number | null;
@@ -90,13 +90,13 @@ export declare class PublicationController {
             type: string;
         };
     } & {
-        id_user: number;
         description: string;
         tags: string | null;
         image: string | null;
         video: string | null;
         audience: import("@prisma/client").$Enums.Audience;
         id_publication: number;
+        id_user: number;
         id_group: number | null;
         date_publication: Date;
         id_ville: number | null;
@@ -127,13 +127,13 @@ export declare class PublicationController {
         statusCode: number;
         message: string;
         data: {
-            id_user: number;
             description: string;
             tags: string | null;
             image: string | null;
             video: string | null;
             audience: import("@prisma/client").$Enums.Audience;
             id_publication: number;
+            id_user: number;
             id_group: number | null;
             date_publication: Date;
             id_ville: number | null;

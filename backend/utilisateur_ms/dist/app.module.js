@@ -14,6 +14,8 @@ const config_1 = require("@nestjs/config");
 const auth_module_1 = require("./auth/auth.module");
 const prisma_service_1 = require("./prisma/prisma.service");
 const user_module_1 = require("./user/user.module");
+const event_emitter_1 = require("@nestjs/event-emitter");
+const microservices_1 = require("@nestjs/microservices");
 let AppModule = class AppModule {
     configure(consumer) {
         consumer.apply((req, res, next) => {
@@ -29,8 +31,19 @@ exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
             config_1.ConfigModule.forRoot(),
+            event_emitter_1.EventEmitterModule.forRoot(),
             user_module_1.UserModule,
             auth_module_1.AuthModule,
+            microservices_1.ClientsModule.register([
+                {
+                    name: 'GROUP_SERVICE',
+                    transport: microservices_1.Transport.TCP,
+                    options: {
+                        host: '127.0.0.1',
+                        port: 4002,
+                    },
+                },
+            ]),
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService, prisma_service_1.PrismaService],

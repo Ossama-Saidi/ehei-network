@@ -52,9 +52,19 @@ const passport_1 = require("@nestjs/passport");
 const auth_dto_1 = require("../auth/dto/auth.dto");
 const multer_1 = require("@nestjs/platform-express/multer");
 const jwt = __importStar(require("jsonwebtoken"));
+const microservices_1 = require("@nestjs/microservices");
 let UserController = class UserController {
     constructor(userService) {
         this.userService = userService;
+    }
+    async getAllUsersToCache() {
+        console.log('[USER_SERVICE] 🔐 Received get_all_users request');
+        const users = await this.userService.getAllUsers();
+        console.log('[USER_SERVICE] ✅ Sending all users');
+        return users;
+    }
+    async getAllUsers() {
+        return this.userService.getAllUsers();
     }
     async getUserProfileJwt(req) {
         const userToken = req.headers["authorization"].split(" ")[1];
@@ -85,9 +95,6 @@ let UserController = class UserController {
     }
     async getUser(email) {
         return this.userService.getUserByEmail(email);
-    }
-    async getAllUsers() {
-        return this.userService.getAllUsers();
     }
     async modify(req, updateData) {
         return this.userService.modify(req.user['id'], updateData);
@@ -145,6 +152,19 @@ let UserController = class UserController {
 };
 exports.UserController = UserController;
 __decorate([
+    (0, microservices_1.MessagePattern)({ cmd: 'get_all_users' }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "getAllUsersToCache", null);
+__decorate([
+    (0, common_1.Get)(),
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "getAllUsers", null);
+__decorate([
     (0, common_1.Get)('profil/jwt'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     __param(0, (0, common_1.Req)()),
@@ -168,8 +188,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "getUserProfile", null);
 __decorate([
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Put)('profil'),
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -184,13 +204,6 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "getUser", null);
-__decorate([
-    (0, common_1.Get)(),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], UserController.prototype, "getAllUsers", null);
 __decorate([
     (0, common_1.Put)('modify'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),

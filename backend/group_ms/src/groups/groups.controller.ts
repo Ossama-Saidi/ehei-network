@@ -64,17 +64,17 @@ export class GroupsController {
   }
 
  @Get()
-find(@Query('id') id?: number, @Query('name') name?: string) {
-  if (id) {
-    return this.groupsService.findGroupById(Number(id));
-  } else if (name) {
-    return this.groupsService.findMany(name);
-  } else {
-    return this.groupsService.findAll();
+  find(@Query('id') id?: number, @Query('name') name?: string) {
+    if (name) {
+      return this.groupsService.findMany(name);
+    } 
+      return this.groupsService.findAll();
   }
-}
-
-
+  // Add a new endpoint specifically for getting group details
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.groupsService.findGroupById(Number(id));
+  }
   @Patch(':id')
   @UseGuards(GroupAdminGuard)
   update(@Param('id') id: string, @Body() updateGroupDto: UpdateGroupDto) {

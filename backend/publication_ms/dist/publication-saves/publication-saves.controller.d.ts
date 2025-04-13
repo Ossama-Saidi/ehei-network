@@ -4,13 +4,13 @@ export declare class PublicationSavesController {
     private readonly publicationSavesService;
     constructor(publicationSavesService: PublicationSavesService);
     savePublication(savePublicationDto: savePublicationDto): Promise<{
-        id_user: number;
         id_publication: number;
+        id_user: number;
         id_save: number;
     }>;
     removeSavedPublication(savePublicationDto: savePublicationDto): Promise<{
-        id_user: number;
         id_publication: number;
+        id_user: number;
         id_save: number;
     }>;
     getUserSavedPublications(id_user: number, skip?: number, take?: number, includeDetails?: boolean, sortBy?: 'recent' | 'oldest' | 'relevant'): Promise<{
@@ -33,13 +33,13 @@ export declare class PublicationSavesController {
                     type: string;
                 };
             } & {
-                id_user: number;
                 description: string;
                 tags: string | null;
                 image: string | null;
                 video: string | null;
                 audience: import("@prisma/client").$Enums.Audience;
                 id_publication: number;
+                id_user: number;
                 id_group: number | null;
                 date_publication: Date;
                 id_ville: number | null;
@@ -48,8 +48,8 @@ export declare class PublicationSavesController {
                 id_technologie: number | null;
             };
         } & {
-            id_user: number;
             id_publication: number;
+            id_user: number;
             id_save: number;
         })[];
         pagination: {

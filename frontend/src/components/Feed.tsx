@@ -16,6 +16,7 @@ import PublicationsList from '@/components/publication/PublicationsList';
 import { Button } from '@/components/ui/button';
 import SortFilter from '@/components/publication/SortFilter';
 import { Publication } from './publication/publication.interface';
+import { getAuthToken } from '@/utils/authUtils';
 const Feed: React.FC<FeedProps> = ({ className }) => {
 
   const router = useRouter();  // Initialize router
@@ -33,6 +34,7 @@ const Feed: React.FC<FeedProps> = ({ className }) => {
   const [publications, setPublications] = useState<Publication[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('top');
+  const token = getAuthToken();
 
   useEffect(() => {
     const socket = io(`${process.env.NEXT_PUBLIC_URL}`); // Connect to your server's WebSocket endpoint
@@ -56,13 +58,17 @@ const Feed: React.FC<FeedProps> = ({ className }) => {
         : `${process.env.NEXT_PUBLIC_API_URL}/publications`;
 
       try {
-        const response = await fetch(endpoint);
+        const response = await fetch(endpoint, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`Erreur HTTP ${response.status}: ${errorText}`);
         }
         let data = await response.json();
-        data = data.sort((a: any, b: any) => new Date(b.date_publication) - new Date(a.date_publication));
+        data = data.sort((a: any, b: any) => 
+          new Date(b.date_publication).getTime() - new Date(a.date_publication).getTime()
+        );
         setPublications(data);
       } catch (error) {
         console.error("Erreur lors de la récupération des publications :", error);
@@ -83,19 +89,24 @@ const Feed: React.FC<FeedProps> = ({ className }) => {
     // Create FormData object
     const formData = new FormData();
     formData.append('file', image);
-
+    
     try {
       setUploading(true);
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/publications/upload`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}` // Envoi du token dans l'en-tête
         },
         timeout: 10000 // 10 second timeout
       });
-      console.log('Upload response:', response.data);
+      // console.log('Upload response:', response.data);
       return response.data.imageUrl;
-    } catch (error) {
-      console.error('Image upload error:', error.response ? error.response.data : error.message);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.error('Image upload error:', error.response?.data);
+      } else {
+        console.error('Image upload error:', error instanceof Error ? error.message : String(error));
+      }
       return null;
     } finally {
       setUploading(false);
@@ -114,11 +125,10 @@ const Feed: React.FC<FeedProps> = ({ className }) => {
     ].filter(Boolean); // Filtrer les valeurs nulles ou vides
 
     const imageUrl = await uploadImage();
-    console.log('Uploaded Image URL:', imageUrl); // Debug log
+    // console.log('Uploaded Image URL:', imageUrl); // Debug log
 
     // Préparer les données à envoyer au serveur
     const payload = {
-        id_user: 101, // Remplace par l'ID réel de l'utilisateur connecté
         description,
         image: imageUrl,
         tags,
@@ -131,7 +141,7 @@ const Feed: React.FC<FeedProps> = ({ className }) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/publications`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
         body: JSON.stringify(payload),
       });
 

@@ -12,6 +12,7 @@ const publication_saves_service_1 = require("./publication-saves.service");
 const publication_saves_controller_1 = require("./publication-saves.controller");
 const prisma_service_1 = require("../prisma/prisma.service");
 const prisma_module_1 = require("../prisma/prisma.module");
+const auth_module_1 = require("../auth/auth.module");
 let PublicationSavesModule = class PublicationSavesModule {
 };
 exports.PublicationSavesModule = PublicationSavesModule;
@@ -19,6 +20,7 @@ exports.PublicationSavesModule = PublicationSavesModule = __decorate([
     (0, common_1.Module)({
         imports: [
             prisma_module_1.PrismaModule,
+            auth_module_1.AuthModule
         ],
         controllers: [publication_saves_controller_1.PublicationSavesController],
         providers: [

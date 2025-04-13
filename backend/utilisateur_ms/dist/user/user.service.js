@@ -41,26 +41,26 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const bcrypt = __importStar(require("bcrypt"));
+const common_2 = require("@nestjs/common");
+const microservices_1 = require("@nestjs/microservices");
 let UserService = class UserService {
-    constructor(prisma) {
+    constructor(prisma, userEventsClient) {
         this.prisma = prisma;
+        this.userEventsClient = userEventsClient;
     }
     async getUserByEmail(email) {
         return this.prisma.utilisateur.findUnique({ where: { email } });
     }
     async getAllUsers() {
         return this.prisma.utilisateur.findMany();
-    }
-    async updateUser(userId, updateUserDto) {
-        return this.prisma.utilisateur.update({
-            where: { id: userId },
-            data: updateUserDto,
-        });
     }
     async getUserById(userId) {
         const user = await this.prisma.utilisateur.findUnique({
@@ -82,8 +82,35 @@ let UserService = class UserService {
         }
         return user;
     }
+    async updateUser(userId, updateData) {
+        await this.prisma.utilisateur.update({
+            where: { id: userId },
+            data: updateData
+        });
+        const updatedUser = await this.prisma.utilisateur.findUnique({ where: { id: userId } });
+        this.userEventsClient.emit('user_updated', {
+            id: updatedUser.id,
+            email: updatedUser.email,
+            nom: updatedUser.nom,
+            prenom: updatedUser.prenom,
+            role: updatedUser.role
+        });
+        return updatedUser;
+    }
     async modify(userId, updateData) {
-        return this.prisma.utilisateur.update({ where: { id: userId }, data: updateData });
+        await this.prisma.utilisateur.update({
+            where: { id: userId },
+            data: updateData
+        });
+        const updatedUser = await this.prisma.utilisateur.findUnique({ where: { id: userId } });
+        this.userEventsClient.emit('user_updated', {
+            id: updatedUser.id,
+            email: updatedUser.email,
+            nom: updatedUser.nom,
+            prenom: updatedUser.prenom,
+            role: updatedUser.role
+        });
+        return updatedUser;
     }
     async changePassword(userId, oldPassword, newPassword) {
         const user = await this.prisma.utilisateur.findUnique({ where: { id: userId } });
@@ -237,6 +264,8 @@ let UserService = class UserService {
 exports.UserService = UserService;
 exports.UserService = UserService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __param(1, (0, common_2.Inject)('PUBLICATION_EVENTS_SERVICE')),
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        microservices_1.ClientProxy])
 ], UserService);
 //# sourceMappingURL=user.service.js.map

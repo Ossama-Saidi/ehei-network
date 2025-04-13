@@ -41,7 +41,13 @@ export declare class AuthController {
         };
         token: string;
     }>;
-    verifyJwt(data: {
-        token: string;
-    }): Promise<string | (() => string)>;
+    verifyToken(token: string): Promise<{
+        isValid: boolean;
+        user: any;
+        error?: undefined;
+    } | {
+        isValid: boolean;
+        error: any;
+        user?: undefined;
+    }>;
 }

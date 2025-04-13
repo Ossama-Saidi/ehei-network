@@ -1,5 +1,8 @@
 'use client';
 
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { getAuthToken, removeAuthToken } from '@/utils/authUtils';
+
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -48,7 +51,7 @@ export default function ProfilePage() {
     const fetchUserProfile = async () => {
       try {
         // Check if the user is authenticated by getting the token from localStorage
-        const token = localStorage.getItem('authToken');
+        const token = getAuthToken();
         
         if (!token) {
           // Redirect to login if no token found
@@ -67,7 +70,7 @@ export default function ProfilePage() {
         if (!response.ok) {
           if (response.status === 401) {
             // Token expired or invalid
-            localStorage.removeItem('authToken');
+            removeAuthToken();
             router.push('/login');
             return;
           }
@@ -106,7 +109,7 @@ export default function ProfilePage() {
     setIsLoading(true);
     
     try {
-      const token = localStorage.getItem('authToken');
+      const token = getAuthToken();
       
       if (!token) {
         router.push('/login');
@@ -160,19 +163,7 @@ export default function ProfilePage() {
         // In a production environment, you would upload this to a server/cloud storage
         const imageUrl = URL.createObjectURL(file);
         setBanner(imageUrl);
-        
-        // Optional: Upload the image to server immediately
-        // const formData = new FormData();
-        // formData.append('bannerImage', file);
-        // const response = await fetch('http://localhost:3001/user/upload-banner', {
-        //   method: 'POST',
-        //   headers: {
-        //     'Authorization': Bearer ${localStorage.getItem('authToken')}
-        //   },
-        //   body: formData
-        // });
-        // const data = await response.json();
-        // setBanner(data.imageUrl);
+
       } catch (error) {
         console.error('Error handling banner change:', error);
         toast.error('Failed to update banner image');
@@ -189,18 +180,6 @@ export default function ProfilePage() {
         const imageUrl = URL.createObjectURL(file);
         setProfilePhoto(imageUrl);
         
-        // Optional: Upload the image to server immediately
-        // const formData = new FormData();
-        // formData.append('profileImage', file);
-        // const response = await fetch('http://localhost:3001/user/upload-profile', {
-        //   method: 'POST',
-        //   headers: {
-        //     'Authorization': Bearer ${localStorage.getItem('authToken')}
-        //   },
-        //   body: formData
-        // });
-        // const data = await response.json();
-        // setProfilePhoto(data.imageUrl);
       } catch (error) {
         console.error('Error handling profile photo change:', error);
         toast.error('Failed to update profile photo');
@@ -218,6 +197,7 @@ export default function ProfilePage() {
   }
 
   return (
+    <ProtectedRoute>
     <form className="space-y-6" onSubmit={handleSubmit}>
       <div className="w-full mx-auto flex flex-col items-center">
         {/* Banner */}
@@ -226,12 +206,13 @@ export default function ProfilePage() {
           
           <Dialog>
             <DialogTrigger asChild>
-              <button 
-                type="button" 
-                className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
-              >
-                <Pencil className="w-5 h-5 text-gray-600" />
-              </button>
+            <button
+              type="button"
+              className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
+              aria-label="Edit"
+            >
+              <Pencil className="w-5 h-5 text-gray-600" />
+            </button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
@@ -286,6 +267,7 @@ export default function ProfilePage() {
               <button 
                 type="button"
                 className="absolute bottom-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
+                aria-label="Edit"
               >
                 <Upload className="w-5 h-5 text-gray-600" />
               </button>
@@ -364,5 +346,6 @@ export default function ProfilePage() {
         </div>
       </div>
     </form>
+    </ProtectedRoute>
   );
 }

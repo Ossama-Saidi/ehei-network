@@ -6,14 +6,14 @@ export declare class PublicationService {
     private readonly prisma;
     private readonly publicationGateway;
     constructor(prisma: PrismaService, publicationGateway: PublicationGateway);
-    createPublication(data: CreatePublicationDto): Promise<{
-        id_user: number;
+    createPublication(data: CreatePublicationDto, userId: number): Promise<{
         description: string;
         tags: string | null;
         image: string | null;
         video: string | null;
         audience: import("@prisma/client").$Enums.Audience;
         id_publication: number;
+        id_user: number;
         id_group: number | null;
         date_publication: Date;
         id_ville: number | null;
@@ -22,13 +22,13 @@ export declare class PublicationService {
         id_technologie: number | null;
     }>;
     updatePublicationAudience(id_publication: number, id_user: number, newAudience: Audience): Promise<{
-        id_user: number;
         description: string;
         tags: string | null;
         image: string | null;
         video: string | null;
         audience: import("@prisma/client").$Enums.Audience;
         id_publication: number;
+        id_user: number;
         id_group: number | null;
         date_publication: Date;
         id_ville: number | null;
@@ -37,13 +37,13 @@ export declare class PublicationService {
         id_technologie: number | null;
     }>;
     consulterPublications(): Promise<{
-        id_user: number;
         description: string;
         tags: string | null;
         image: string | null;
         video: string | null;
         audience: import("@prisma/client").$Enums.Audience;
         id_publication: number;
+        id_user: number;
         id_group: number | null;
         date_publication: Date;
         id_ville: number | null;
@@ -52,13 +52,13 @@ export declare class PublicationService {
         id_technologie: number | null;
     }[]>;
     consulterPublication(id_publication: string): Promise<{
-        id_user: number;
         description: string;
         tags: string | null;
         image: string | null;
         video: string | null;
         audience: import("@prisma/client").$Enums.Audience;
         id_publication: number;
+        id_user: number;
         id_group: number | null;
         date_publication: Date;
         id_ville: number | null;
@@ -84,13 +84,13 @@ export declare class PublicationService {
             type: string;
         };
     } & {
-        id_user: number;
         description: string;
         tags: string | null;
         image: string | null;
         video: string | null;
         audience: import("@prisma/client").$Enums.Audience;
         id_publication: number;
+        id_user: number;
         id_group: number | null;
         date_publication: Date;
         id_ville: number | null;

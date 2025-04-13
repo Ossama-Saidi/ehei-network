@@ -1,11 +1,21 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterDto } from './dto/auth.dto';
+import { ClientProxy } from '@nestjs/microservices';
 export declare class AuthService {
     private readonly prisma;
     private readonly jwtService;
-    decodeToken(token: string): string | (() => string);
-    constructor(prisma: PrismaService, jwtService: JwtService);
+    private readonly userEventsClient;
+    constructor(prisma: PrismaService, jwtService: JwtService, userEventsClient: ClientProxy);
+    verifyToken(token: string): Promise<{
+        isValid: boolean;
+        user: any;
+        error?: undefined;
+    } | {
+        isValid: boolean;
+        error: any;
+        user?: undefined;
+    }>;
     register(data: RegisterDto): Promise<{
         user: {
             id: number;

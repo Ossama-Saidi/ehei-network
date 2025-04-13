@@ -27,8 +27,12 @@ let AuthController = class AuthController {
     async login(credentials) {
         return this.authService.login(credentials.email, credentials.password);
     }
-    async verifyJwt(data) {
-        return this.authService.decodeToken(data.token);
+    async verifyToken(token) {
+        console.log('[USER_SERVICE] 🔐 Received verify_jwt request');
+        const start = Date.now();
+        const response = await this.authService.verifyToken(token);
+        console.log('[USER_SERVICE] ✅ Token verified in', Date.now() - start, 'ms');
+        return response;
     }
 };
 exports.AuthController = AuthController;
@@ -49,9 +53,9 @@ __decorate([
 __decorate([
     (0, microservices_1.MessagePattern)({ cmd: 'verify_jwt' }),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], AuthController.prototype, "verifyJwt", null);
+], AuthController.prototype, "verifyToken", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

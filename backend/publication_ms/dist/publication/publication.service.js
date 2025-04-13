@@ -22,7 +22,7 @@ let PublicationService = class PublicationService {
         this.prisma = prisma;
         this.publicationGateway = publicationGateway;
     }
-    async createPublication(data) {
+    async createPublication(data, userId) {
         try {
             const ville = data.ville ? await this.prisma.ville.findFirst({
                 where: { nom: data.ville },
@@ -36,10 +36,9 @@ let PublicationService = class PublicationService {
             const technologie = data.technologie ? await this.prisma.technologie.findFirst({
                 where: { nom: data.technologie },
             }) : null;
-            console.log('Creating publication with DTO:', data);
             const publication = await this.prisma.publications.create({
                 data: {
-                    id_user: data.id_user,
+                    id_user: userId,
                     description: data.description,
                     date_publication: new Date(),
                     image: data.image,

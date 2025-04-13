@@ -4,6 +4,38 @@ import { ChangePasswordDto, ModifyUserDto } from 'src/auth/dto/auth.dto';
 export declare class UserController {
     private readonly userService;
     constructor(userService: UserService);
+    getAllUsersToCache(): Promise<{
+        id: number;
+        nom: string;
+        prenom: string;
+        telephone: string;
+        email: string;
+        password: string;
+        badge: boolean;
+        role: import("@prisma/client").$Enums.Role;
+        status: import("@prisma/client").$Enums.AccountStatus;
+        bio: string | null;
+        profilePhoto: string | null;
+        bannerPhoto: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
+    getAllUsers(): Promise<{
+        id: number;
+        nom: string;
+        prenom: string;
+        telephone: string;
+        email: string;
+        password: string;
+        badge: boolean;
+        role: import("@prisma/client").$Enums.Role;
+        status: import("@prisma/client").$Enums.AccountStatus;
+        bio: string | null;
+        profilePhoto: string | null;
+        bannerPhoto: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
     getUserProfileJwt(req: Request): Promise<{
         success: boolean;
         message: string;
@@ -93,22 +125,6 @@ export declare class UserController {
         createdAt: Date;
         updatedAt: Date;
     }>;
-    getAllUsers(): Promise<{
-        id: number;
-        nom: string;
-        prenom: string;
-        telephone: string;
-        email: string;
-        password: string;
-        badge: boolean;
-        role: import("@prisma/client").$Enums.Role;
-        status: import("@prisma/client").$Enums.AccountStatus;
-        bio: string | null;
-        profilePhoto: string | null;
-        bannerPhoto: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-    }[]>;
     modify(req: Request, updateData: ModifyUserDto): Promise<{
         id: number;
         nom: string;
