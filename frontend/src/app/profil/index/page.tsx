@@ -5,6 +5,7 @@ import { Loader2, Edit2, MessageCircle, Users, Calendar, MapPin, Link as LinkIco
 import Sidebar from '@/components/Sidebar';
 import RightSidebar from '@/components/RightSidebar';
 import Feed from '@/components/Feed';
+import { getAuthToken, removeAuthToken } from '@/utils/authUtils';
 
 interface UserProfile {
   id?: string;
@@ -33,7 +34,7 @@ export default function ProfileIndex() {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const token = localStorage.getItem('authToken');
+        const token = getAuthToken();
         if (!token) {
           router.push('/login');
           return;
@@ -49,7 +50,7 @@ export default function ProfileIndex() {
 
         if (!response.ok) {
           if (response.status === 401) {
-            localStorage.removeItem('authToken');
+            removeAuthToken();
             router.push('/login');
             return;
           }

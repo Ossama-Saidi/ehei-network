@@ -101,7 +101,10 @@ export class AuthService {
       role: user.role, 
       nomComplet: `${user.nom} ${user.prenom}`,
       nom: user.nom,
-      prenom: user.prenom
+      prenom: user.prenom,
+      bio: user.bio,
+      badge: user.badge,
+      telephone: user.telephone,
     });
   }
 }

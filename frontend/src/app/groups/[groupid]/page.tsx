@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CalendarDays, Users, Lock, Unlock, ChevronLeft, RefreshCw } from 'lucide-react';
+import { getAuthToken } from '@/utils/authUtils';
 
 interface Group {
   id: number;
@@ -29,7 +30,7 @@ export default function GroupPage() {
   useEffect(() => {
     async function fetchGroupDetails() {
       try {
-        const token = localStorage.getItem('authToken');
+        const token = getAuthToken();
         if (!token) {
           router.push('/login');
           return;
@@ -65,7 +66,7 @@ export default function GroupPage() {
     setError(null);
     const fetchGroupDetails = async () => {
       try {
-        const token = localStorage.getItem('authToken');
+        const token = getAuthToken();
         if (!token) {
           router.push('/login');
           return;

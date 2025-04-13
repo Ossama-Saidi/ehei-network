@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { GroupCard } from '@/components/groups/GroupCard';
 import { CreateGroupModal } from '@/components/groups/CreateGroupModal';
 import { Loader2, Plus, Search } from 'lucide-react';
+import { getAuthToken } from '@/utils/authUtils';
 
 interface Group {
   id: number;
@@ -34,7 +35,7 @@ export default function GroupsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('authToken');
+      const token = getAuthToken();
       
       if (!token) {
         throw new Error('Authentication token not found');

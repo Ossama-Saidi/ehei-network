@@ -34,12 +34,15 @@ export const authHeader = () => {
 };
 
 export interface DecodedToken {
-  sub: string;
+  sub: number;
   email: string;
   role: string;
   nomComplet: string;
-  iat?: number;
-  exp?: number;
+  nom: string;
+  prenom: string;
+  bio?: string;
+  badge?: string;
+  telephone?: string;
 }
 
 export const getDecodedToken = (): DecodedToken | null => {

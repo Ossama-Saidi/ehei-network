@@ -21,6 +21,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { getAuthToken } from '@/utils/authUtils';
 
 interface GroupCreationData {
   
@@ -89,7 +90,7 @@ export default function CreateGroupPage() {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem('authToken');
+      const token = getAuthToken();
       if (!token) {
         router.push('/login');
         return;

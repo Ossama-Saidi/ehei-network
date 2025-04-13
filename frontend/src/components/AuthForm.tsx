@@ -136,7 +136,8 @@ export default function AuthForm() {
       }
 
       toast.success(isRegister ? 'Inscription réussie !' : 'Connexion réussie !');
-      router.push('/profil'); // Redirect to profile page
+      router.push(isRegister ? '/profil' : '/');
+
     } catch (error) {
       console.error('Authentication error:', error);
       toast.error('Une erreur est survenue. Veuillez réessayer.');

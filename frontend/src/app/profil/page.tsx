@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from "@/components/ui/label";
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { 
   Pencil, 
   Upload, 
@@ -30,6 +31,7 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import { getAuthToken, removeAuthToken } from '@/utils/authUtils';
 
 interface UserProfile {
   nom: string;
@@ -83,7 +85,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const token = localStorage.getItem('authToken');
+        const token = getAuthToken();
         if (!token) {
           router.push('/login');
           return;
@@ -99,7 +101,7 @@ export default function ProfilePage() {
 
         if (!response.ok) {
           if (response.status === 401) {
-            localStorage.removeItem('authToken');
+            removeAuthToken();
             router.push('/login');
             return;
           }
@@ -150,7 +152,7 @@ export default function ProfilePage() {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem('authToken');
+      const token = getAuthToken();
       if (!token) {
         router.push('/login');
         return;
@@ -253,7 +255,7 @@ const handleBannerUpload = async () => {
     const file = bannerInputRef.current?.files?.[0];
     if (!file) return;
     
-    const token = localStorage.getItem('authToken');
+    const token = getAuthToken();
     if (!token) {
       router.push('/login');
       return;
