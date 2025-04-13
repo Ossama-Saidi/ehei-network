@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ModifyUserDto } from 'src/auth/dto/auth.dto';
+import { ModifyUserDto } from '../auth/dto/auth.dto'
 import * as bcrypt from 'bcrypt';
 // import { FileUploadService } from '../file-upload/FileUploadService';
 import { Inject } from '@nestjs/common';
@@ -15,7 +15,7 @@ export class UserService {
 
   // private readonly fileUploadService: FileUploadService
   ) {}
-  
+
   /**
    * Get user by email
    * @param email - User email
@@ -63,6 +63,7 @@ export class UserService {
      * @param userId - User ID
      * @param updateData - Data to update user profile
      */
+
     async updateUser(userId: number, updateData: ModifyUserDto) {
       await this.prisma.utilisateur.update({ 
         where: { id: userId }, 
@@ -323,7 +324,7 @@ export class UserService {
       throw new BadRequestException(`Failed to generate temporary upload URL: ${error.message}`);
     }
   }
-
+    
 }
  /* private readonly uploadDir = path.join(__dirname, '..', 'uploads'); // Use path.join
 
