@@ -5,15 +5,25 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { PrismaService } from './prisma/prisma.service';
 import { UserModule } from './user/user.module';
-//import { join } from 'path';
-//import { ServeStaticModule } from '@nestjs/serve-static';
+import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
-    
     ConfigModule.forRoot(),
+    EventEmitterModule.forRoot(),
     UserModule,
     AuthModule,
+    ClientsModule.register([
+      {
+        name: 'GROUP_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: '127.0.0.1',
+          port: 4002,
+        },
+      },
+    ]),    
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

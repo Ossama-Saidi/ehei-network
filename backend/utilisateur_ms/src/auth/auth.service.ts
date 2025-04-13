@@ -3,22 +3,35 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/auth.dto';
-import * as jwt from 'jsonwebtoken';
+import { ClientProxy } from '@nestjs/microservices';
+// import * as jwt from 'jsonwebtoken';
+import { Inject } from '@nestjs/common';
 
 @Injectable()
 export class AuthService {
-  decodeToken(token: string) {
-    try{
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    return decoded.sub;
-  }catch(error){
-    throw new Error('Method not implemented.');
-  }
-  }
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    @Inject('PUBLICATION_EVENTS_SERVICE') 
+    private readonly userEventsClient: ClientProxy
   ) {}
+
+  async verifyToken(token: string) {
+    console.log('[USER_SERVICE] ➡️ Inside verifyToken method');
+    try{
+    // const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Utiliser le jwtService au lieu de jwt.verify directement
+    const decoded = await this.jwtService.verifyAsync(token, {
+      secret: process.env.JWT_SECRET
+    });
+    console.log('[USER_SERVICE] ✅ Token verified', decoded);
+    return { isValid: true, user: decoded };
+    } catch(error) {
+      console.log('[USER_SERVICE] ❌ Token verification failed:', error.message);
+      return { isValid: false, error: error.message };
+    }
+  }
 
   /**
    * Register a new user
@@ -26,15 +39,24 @@ export class AuthService {
    */
   async register(data: RegisterDto) {
     const existingUser = await this.prisma.utilisateur.findUnique({ where: { email: data.email } });
-
     if (existingUser) throw new UnauthorizedException('Email already exists');
-
     const hashedPassword = await bcrypt.hash(data.password, 10);
     const user = await this.prisma.utilisateur.create({
       data: { ...data, password: hashedPassword },
     });
-
-    return { user, token: this.generateToken(user) };
+    // Generate the token as you were doing before
+    const token = this.generateToken(user);
+        
+    // Emit an event that a user was created
+    this.userEventsClient.emit('user_created', {
+      id: user.id,
+      email: user.email,
+      nom: user.nom,
+      prenom: user.prenom,
+      role: user.role,
+      // Include any other user fields needed by the publication service
+    });    
+    return { user, token };
   }
 
   /**
@@ -49,13 +71,37 @@ export class AuthService {
     }
     return { user, token: this.generateToken(user) };
   }
+//--------------------------------------------
+//---------- LOOK HERE IMPORTANTE-------------
+//--------------------------------------------
+  // async update(id: string, updateUserDto) {
+  //   // Update in database
+  //   const user = await this.usersRepository.update(id, updateUserDto);
+    
+  //   // Emit event
+  //   this.eventEmitter.emit('user.updated', user);
+    
+  //   return user;
+  // }
 
+  // async remove(id: string) {
+  //   await this.usersRepository.delete(id);
+    
+  //   // Emit event
+  //   this.eventEmitter.emit('user.deleted', { id });
+  // }
   /**
    * Generate JWT token
    * @param user - User object
    */
   private generateToken(user: any): string {
-    return this.jwtService.sign({ sub: user.id, email: user.email, role: user.role });
+    return this.jwtService.sign({ 
+      sub: user.id, 
+      email: user.email, 
+      role: user.role, 
+      nomComplet: `${user.nom} ${user.prenom}`,
+      nom: user.nom,
+      prenom: user.prenom
+    });
   }
-  
 }

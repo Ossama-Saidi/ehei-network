@@ -1,6 +1,8 @@
 // pages/saved.tsx
 'use client';
 import React, { useEffect, useState } from 'react';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+
 import { Book, Bookmark,  ChevronDown,  Settings2,  Grid, MoreHorizontal, Maximize2 } from 'lucide-react';
 import Image from 'next/image';
 import axios from 'axios';
@@ -105,6 +107,7 @@ const SavedPostsPage: React.FC = () => {
     };
 
     return (
+          <ProtectedRoute>
       <div className="min-h-screen bg-white">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
@@ -228,6 +231,7 @@ const SavedPostsPage: React.FC = () => {
           </div>
         )}
       </div>
+          </ProtectedRoute>
     );
   };
   

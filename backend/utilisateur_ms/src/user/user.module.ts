@@ -25,14 +25,18 @@ if (!fs.existsSync(uploadsDir)) {
     MulterModule.register({
       dest: './uploads', // Temporary storage for uploaded files
     }),
-    PrismaModule,
-    ConfigModule.forRoot({ isGlobal: true }),
-    PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({
-      secret: process.env.JWT_SECRET, // Use environment variable for JWT secret
-      signOptions: { expiresIn: '2h' }, // Token expiration time
-    }),
     ClientsModule.register([
+      {
+        name: 'PUBLICATION_EVENTS_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://user:password@localhost:5672'],
+          queue: 'user_events_queue', // 📢 This is the queue to emit events to
+          queueOptions: {
+            durable: true,
+          },
+        },
+      },
       {
         name: 'GROUP_SERVICE',
         transport: Transport.TCP,
@@ -42,6 +46,13 @@ if (!fs.existsSync(uploadsDir)) {
         },
       },
     ]),
+    PrismaModule,
+    ConfigModule.forRoot({ isGlobal: true }),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.register({
+      secret: process.env.JWT_SECRET, // Use environment variable for JWT secret
+      signOptions: { expiresIn: '2h' }, // Token expiration time
+    }),
   ],
   controllers: [UserController],
   providers: [UserService, JwtStrategy, PrismaService,FileUploadService],

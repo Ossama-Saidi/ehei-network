@@ -18,7 +18,7 @@ model Utilisateur {
   password      String
   badge         Boolean     @default(false)
   role          Role
-  status        AccountStatus @default(enabled)  // Add this line
+  status        AccountStatus @default(enabled)
   bio           String?
   profilePhoto  String?
   bannerPhoto   String?
@@ -26,6 +26,7 @@ model Utilisateur {
   updatedAt     DateTime    @updatedAt
   etudiant      Etudiant?   @relation("UtilisateurEtudiant")
   professeur    Professeur? @relation("UtilisateurProfesseur")
+  diplome       Diplome? @relation("UtilisateurDiplome")
   friendshipsAsSender   Friendship[] @relation("FriendshipSender")
   friendshipsAsReceiver Friendship[] @relation("FriendshipReceiver")
 }
@@ -49,6 +50,14 @@ model Professeur {
   interets        String
 }
 
+model Diplome {
+  id              Int         @id @default(autoincrement())
+  utilisateurId   Int         @unique
+  utilisateur     Utilisateur @relation(fields: [utilisateurId], references: [id], name: "UtilisateurDiplome")
+  permissionsTags String
+  interets        String
+}
+
 model Administrateur {
   id          Int     @id @default(autoincrement())
   nom         String
@@ -62,6 +71,7 @@ model Administrateur {
 enum Role {
   ETUDIANT
   PROFESSEUR
+  DIPLOME
   ADMINISTRATEUR
 }
 

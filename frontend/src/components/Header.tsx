@@ -1,5 +1,4 @@
 // src/components/Header.tsx
-
 import React from 'react';
 
 interface HeaderProps {
@@ -22,6 +21,7 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Settings, LogOut } from "lucide-react";
+import LogoutButton from './buttons/LogoutButton';
 // import Image from "next/image"
 // import { AspectRatio } from "@/components/ui/aspect-ratio"
 
@@ -133,8 +133,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                 <span>Support</span>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Déconnexion</span>
+                <LogoutButton/>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

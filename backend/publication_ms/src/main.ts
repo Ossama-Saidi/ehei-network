@@ -91,21 +91,22 @@ app.setGlobalPrefix('api');
   //   credentials: true,
   // });
 
-  // Configurer l'application comme microservice
+  // Connect to RabbitMQ for user events
   app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.TCP,
+    transport: Transport.RMQ,
     options: {
-      host: '0.0.0.0',
-      port: microservicePort,
+      urls: ['amqp://user:password@localhost:5672'],
+      queue: 'user_events_queue',
+      queueOptions: {
+        durable: true
+      },
     },
   });
 
-  // Démarrer tous les microservices
-  await app.startAllMicroservices();
-
   // Puis démarrer l'application web
   await app.listen(port, '0.0.0.0');
-
+  // Démarrer tous les microservices
+  await app.startAllMicroservices();
   // Configuration pour servir les fichiers statiques
   // app.useStaticAssets(join(__dirname, '..', 'public'));
 

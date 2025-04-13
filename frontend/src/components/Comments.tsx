@@ -45,7 +45,7 @@ const Comments = () => {
 
   const [newComment, setNewComment] = useState('');
 
-  const CommentItem = ({ comment }) => (
+  const CommentItem = ({ comment }: any) => (
     <div className="flex space-x-3 py-2 border-b">
       <Avatar className="w-10 h-10">
         <AvatarImage src={comment.author.avatar} />

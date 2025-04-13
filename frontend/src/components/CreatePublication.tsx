@@ -8,12 +8,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import PrivacySelector from '@/components/PrivacySelector';
 import { X, Users, CloudUpload, Loader2 } from 'lucide-react'; // ou les icônes équivalentes
-import { CityButton, CompanyButton, EmploiButton, TechButton } from "@/components/SearchPopover";
-import { EmojiButton } from "@/components/EmojiPopover";
+import { CityButton, CompanyButton, EmploiButton, TechButton } from "@/components/buttons/SearchPopover";
+import { EmojiButton } from "@/components/buttons/EmojiPopover";
 import { toast } from 'sonner';
 
 
-export default function CreatePublication ({ open, setImage, setOpen,description, setDescription, uploading, handleSubmit, loading }) {
+export default function CreatePublication ({ open, setImage, setOpen,description, setDescription, uploading, handleSubmit, loading }: any) {
 
     const [privacy, setPrivacy] = useState("Public");
 
@@ -63,7 +63,7 @@ export default function CreatePublication ({ open, setImage, setOpen,description
         // For city, company, and job, append them as hashtags with special styling
         if (["city", "company", "job", "tech"].includes(type)) {
             const formattedTag = `#${value.replace(/\s+/g, "_")}`;
-            setSelectedTags((prevTags) => [...prevTags, formattedTag]);
+            setSelectedTags((prevTags): any => [...prevTags, formattedTag]);
             setHighlight(true);
         }
     };

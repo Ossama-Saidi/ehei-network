@@ -2,9 +2,9 @@ import { IsInt, IsNotEmpty, IsOptional, IsString, IsEnum } from 'class-validator
 import { Audience } from '@prisma/client';
 
 export class CreatePublicationDto {
-  @IsInt()
-  @IsNotEmpty()
-  id_user: number;
+  // @IsInt()
+  // @IsNotEmpty()
+  // id_user: number;
 
   @IsString()
   @IsNotEmpty()

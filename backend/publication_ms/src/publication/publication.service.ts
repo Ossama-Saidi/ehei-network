@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreatePublicationDto } from './dto/create-publication.dto';
 import { Audience } from '@prisma/client';
 import { PublicationGateway } from './publication.gateway';
+import { UserCacheService } from '../users/user-cache.service';
 
 @Injectable()
 export class PublicationService {
@@ -10,9 +11,63 @@ export class PublicationService {
     private readonly prisma: PrismaService,
     @Inject(forwardRef(() => PublicationGateway))
     private readonly publicationGateway: PublicationGateway,
+    // private readonly userCacheService: UserCacheService,
   ) {}
 
-  async createPublication(data: CreatePublicationDto) {
+  // async findAll() {
+  //   const publications = await this.prisma.publications.findMany({
+  //     include: {
+  //       ville: true,
+  //       entreprise: true,
+  //       typeEmploi: true,
+  //       technologie: true,
+  //     }
+  //   });
+    
+  //   // Enrich with user data from cache
+  //   return publications.map(publication => {
+  //     const user = this.userCacheService.getUserById(publication.id_user);
+  //     return {
+  //       ...publication,
+  //       user: user ? {
+  //         id: user.id,
+  //         nomComplet: user.nomComplet,
+  //         role: user.role
+  //       } : null
+  //     };
+  //   });
+  // }
+  // async findOne(id: number) {
+  //   const publication = await this.prisma.publications.findUnique({
+  //     where: { id_publication: id },
+  //     include: {
+  //       ville: true,
+  //       entreprise: true,
+  //       typeEmploi: true,
+  //       technologie: true,
+  //       reactions: true,
+  //       comments: true,
+  //     }
+  //   });
+
+  //   if (!publication) {
+  //     return null;
+  //   }
+
+  //   // Get user data from cache
+  //   const user = this.userCacheService.getUserById(publication.id_user);
+    
+  //   return {
+  //     ...publication,
+  //     user: user ? {
+  //       id: user.id,
+  //       nomComplet: user.nomComplet,
+  //       role: user.role
+  //     } : null
+  //   };
+  // }
+
+  async createPublication(data: CreatePublicationDto, userId: number) {
     try {
       const ville = data.ville ? await this.prisma.ville.findFirst({
         where: { nom: data.ville },
@@ -29,10 +84,10 @@ export class PublicationService {
       const technologie = data.technologie ? await this.prisma.technologie.findFirst({
         where: { nom: data.technologie },
       }) : null;
-      console.log('Creating publication with DTO:', data);
+      // console.log('Creating publication with DTO:', data);
       const publication = await this.prisma.publications.create({
         data: {
-          id_user: data.id_user,
+          id_user: userId,
           description: data.description,
           date_publication: new Date(),
           image: data.image,
@@ -49,6 +104,7 @@ export class PublicationService {
       this.publicationGateway.server.emit('newPublication', publication);
 
       return publication;
+      
     } catch (error) {
       console.error('Error creating publication:', error);
       throw new HttpException('Failed to create publication.', HttpStatus.INTERNAL_SERVER_ERROR);
