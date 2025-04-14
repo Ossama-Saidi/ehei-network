@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DecodedToken, getDecodedToken } from '@/utils/authUtils';
 
 type SortOption = 'recent' | 'oldest' | 'relevant';
 
@@ -39,7 +40,13 @@ interface ApiResponse {
     hasMore: boolean;
   };
 }
-
+interface Post {
+  id: number;
+  nom: string;
+  prenom: string;
+  nomComplet: string;
+  role: string;
+}
 const SavedPostsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'all' | 'collections'>('all');
     const [savedPosts, setSavedPosts] = useState<SavedPublication[]>([]);
@@ -47,15 +54,23 @@ const SavedPostsPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [sortBy, setSortBy] = useState<SortOption>('recent');
     const [sortLabel, setSortLabel] = useState<string>('Plus récent');
-
-    const userId = 101; // Replace with actual authenticated user ID if needed
+    const [user, setUser] = useState<DecodedToken | null>(null);
+    const [authors, setAuthors] = useState<Record<number, Post>>({});
+    
+    useEffect(() => {
+      const tokenData = getDecodedToken();
+      setUser(tokenData);
+    }, []);
 
     useEffect(() => {
-      fetchSavedPosts();
-    }, [sortBy]);
-    
+      if (user) {
+        fetchSavedPosts();
+      }
+    }, [user, sortBy]);
+
     const fetchSavedPosts = async (skip = 0, append = false) => {
         try {
+          const userId = user?.sub;
           const res = await axios.get<ApiResponse>(`${process.env.NEXT_PUBLIC_API_URL}/publication-saves/saves/${userId}`, {
             params: {
               skip, 
@@ -64,16 +79,29 @@ const SavedPostsPage: React.FC = () => {
               sortBy
             },
           });
-          if (append) {
-            setSavedPosts(prev => [...prev, ...res.data.data]);
-          } else {
-            setSavedPosts(res.data.data);
-          }
+          const newSaved = res.data.data;
+          const merged = append ? [...savedPosts, ...newSaved] : newSaved;
+          setSavedPosts(merged);
           setPagination({
-            skip: skip + res.data.data.length,
+            skip: skip + newSaved.length,
             take: pagination.take,
             hasMore: res.data.pagination.hasMore
           });
+          // ✅ Fetch authors if not already fetched
+          const newAuthors = { ...authors };
+          await Promise.all(newSaved.map(async (item) => {
+            const pub = item.publication;
+            if (pub && !newAuthors[pub.id_user]) {
+              try {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${pub.id_user}`);
+                const userData = await response.json();
+                newAuthors[pub.id_user] = userData;
+              } catch (error) {
+                console.error("Erreur fetch user:", error);
+              }
+            }
+          }));
+          setAuthors(newAuthors);
         } catch (error) {
           console.error("Failed to retrieve saved publications.", error);
         } finally {
@@ -83,9 +111,10 @@ const SavedPostsPage: React.FC = () => {
 
     const removeFromSaved = async (id_save: any, id_publication: any) => {
       try {
+        if (!user) return;
         const requestData = {
           id_publication: Number(id_publication),
-          id_user: Number(userId)
+          id_user: Number(user.sub)
         };
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/publication-saves/save`, {
           method: 'DELETE',
@@ -107,7 +136,7 @@ const SavedPostsPage: React.FC = () => {
     };
 
     return (
-          <ProtectedRoute>
+      <ProtectedRoute>
       <div className="min-h-screen bg-white">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
@@ -169,7 +198,7 @@ const SavedPostsPage: React.FC = () => {
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center">
                       <span className="text-sm font-medium">
-                        {publication.id_user ? publication.id_user : 'Utilisateur'}
+                        {authors[publication.id_user]?.nomComplet || 'Utilisateur'}
                       </span>
                     </div>
                     <DropdownMenu>

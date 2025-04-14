@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { MapPin, Building2, BriefcaseBusiness, Worm } from "lucide-react";
+import { MapPinHouse, Building, BriefcaseBusiness, BrainCircuit, Users } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 function SearchPopover({ icon: Icon, placeholder, fetchUrl, onSelect }: { icon: React.ComponentType<React.SVGProps<SVGSVGElement>>; placeholder: string; fetchUrl: string; onSelect: (value: any) => void }) {
@@ -101,17 +101,21 @@ function SearchPopover({ icon: Icon, placeholder, fetchUrl, onSelect }: { icon: 
 //     return <SearchPopover icon={Smile} placeholder="Rechercher un emoji..." fetchUrl="http://localhost:3003/api/publications/emojis" />;
 // }
 
-export function CityButton({ onSelect }) {
-    return <SearchPopover icon={MapPin} placeholder="Rechercher une ville..." fetchUrl="http://localhost:3003/api/publications/cities" onSelect={onSelect}/>;
+export function CityButton({ onSelect }: any) {
+    return <SearchPopover icon={MapPinHouse} placeholder="Rechercher une ville..." fetchUrl={`${process.env.NEXT_PUBLIC_API_URL}/publications/cities`} onSelect={onSelect}/>;
 }
 
-export function CompanyButton({ onSelect }) {
-    return <SearchPopover icon={Building2} placeholder="Rechercher une entreprise..." fetchUrl="http://localhost:3003/api/publications/companies" onSelect={onSelect}/>;
+export function CompanyButton({ onSelect }: any) {
+    return <SearchPopover icon={Building} placeholder="Rechercher une entreprise..." fetchUrl={`${process.env.NEXT_PUBLIC_API_URL}/publications/companies`} onSelect={onSelect}/>;
 }
 
-export function EmploiButton({ onSelect }) {
-    return <SearchPopover icon={BriefcaseBusiness } placeholder="Rechercher un emploi..." fetchUrl="http://localhost:3003/api/publications/emplois" onSelect={onSelect}/>;
+export function EmploiButton({ onSelect }: any) {
+    return <SearchPopover icon={BriefcaseBusiness } placeholder="Rechercher un emploi..." fetchUrl={`${process.env.NEXT_PUBLIC_API_URL}/publications/emplois`} onSelect={onSelect}/>;
 }
-export function TechButton({ onSelect }) {
-    return <SearchPopover icon={Worm} placeholder="Rechercher une technologie..." fetchUrl="http://localhost:3003/api/publications/technologies" onSelect={onSelect}/>;
+export function TechButton({ onSelect }: any) {
+    return <SearchPopover icon={BrainCircuit} placeholder="Rechercher une technologie..." fetchUrl={`${process.env.NEXT_PUBLIC_API_URL}/publications/technologies`} onSelect={onSelect}/>;
+}
+
+export function ClubButton({ onSelect }: any) {
+    return <SearchPopover icon={Users} placeholder="Rechercher une technologie..." fetchUrl="http://localhost:3003/api/publications/technologies" onSelect={onSelect}/>;
 }

@@ -12,10 +12,9 @@ interface PublicationProps {
 }
 
 const Publication: React.FC<PublicationProps> = ({ publication, setPublications }) => {
-  let id_user = 101;
   const decodedToken = getDecodedToken();
-  const nomComplet = decodedToken?.nomComplet || 'Anonymous User';
-
+  // const nomComplet = decodedToken?.nomComplet || 'Anonymous User';
+  const id_user = decodedToken?.sub || 0; // Assuming the user ID is in the token
   return (
       <Card className="rounded-lg shadow-sm">
         <CardContent className="p-4">

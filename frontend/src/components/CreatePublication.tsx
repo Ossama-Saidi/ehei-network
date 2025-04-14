@@ -1,6 +1,6 @@
 'use client';
 
-import { SetStateAction, useState } from 'react';
+import { SetStateAction, useEffect, useState } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Textarea } from "@/components/ui/textarea"
@@ -8,18 +8,34 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import PrivacySelector from '@/components/PrivacySelector';
 import { X, Users, CloudUpload, Loader2 } from 'lucide-react'; // ou les icônes équivalentes
-import { CityButton, CompanyButton, EmploiButton, TechButton } from "@/components/buttons/SearchPopover";
+import { CityButton, CompanyButton, EmploiButton, TechButton, ClubButton } from "@/components/buttons/SearchPopover";
 import { EmojiButton } from "@/components/buttons/EmojiPopover";
 import { toast } from 'sonner';
+import { DecodedToken, getDecodedToken } from '@/utils/authUtils';
 
 
 export default function CreatePublication ({ open, setImage, setOpen,description, setDescription, uploading, handleSubmit, loading }: any) {
+    
+    const decodedToken = getDecodedToken();
+    const role = decodedToken?.role;
+
+    const [user, setUser] = useState<DecodedToken | null>(null);    
+        useEffect(() => {
+          const tokenData = getDecodedToken();
+          setUser(tokenData);
+        }, []);
+      
+      // Get initials for avatar fallback
+      const getInitials = () => {
+        if (user && user.nom && user.prenom) {
+          return `${user.prenom.charAt(0)}${user.nom.charAt(0)}`;
+        }
+        return 'U'; // Default fallback
+      };
 
     const [privacy, setPrivacy] = useState("Public");
-
     // const [image, setImage] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
-
     const [selectedValues, setSelectedValues] = useState({
         emoji: null,
         city: null,
@@ -82,8 +98,8 @@ export default function CreatePublication ({ open, setImage, setOpen,description
     return (
             <div className="bg-white p-4 rounded-lg shadow-sm flex items-center gap-4">
                 <Avatar>
-                    <AvatarImage src="https://github.com/shadcn.png" />
-                    <AvatarFallback>OS</AvatarFallback>
+                    {/* <AvatarImage src="https://github.com/shadcn.png" /> */}
+                    <AvatarFallback>{getInitials()}</AvatarFallback>
                 </Avatar>
                 <Input
                     placeholder="Que voulez-vous partager?"
@@ -100,8 +116,8 @@ export default function CreatePublication ({ open, setImage, setOpen,description
                         </DialogHeader>
                         <div className="flex items-center gap-3 py-4">
                             <Avatar>
-                                <AvatarImage src="https://github.com/shadcn.png" />
-                                <AvatarFallback>OS</AvatarFallback>
+                                {/* <AvatarImage src="https://github.com/shadcn.png" /> */}
+                                <AvatarFallback>{getInitials()}</AvatarFallback>
                             </Avatar>
                             <div>
                             {/* <p className="text-base font-semibold">Ossama Saidi</p> */}
@@ -123,9 +139,15 @@ export default function CreatePublication ({ open, setImage, setOpen,description
                             <div className="flex gap-2">
                                 <EmojiButton onSelect={(value: string) => handleSelection("emoji", value)} />
                                 <CityButton onSelect={(value: string) => handleSelection("city", value)} />
-                                <CompanyButton onSelect={(value: string) => handleSelection("company", value)} />
-                                <EmploiButton onSelect={(value: string) => handleSelection("job", value)} />
-                                <TechButton onSelect={(value: string) => handleSelection("tech", value)} />
+                                {role !== "ETUDIANT" ? (
+                                <>
+                                    <CompanyButton onSelect={(value: string) => handleSelection("company", value)} />
+                                    <EmploiButton onSelect={(value: string) => handleSelection("job", value)} />
+                                    <TechButton onSelect={(value: string) => handleSelection("tech", value)} />
+                                </>
+                                ) : (
+                                    <ClubButton onSelect={(value: string) => handleSelection("tech", value)} />
+                                )}
                             </div>
                         </div>
                         {/* Zone de prévisualisation d'image */}

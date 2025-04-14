@@ -19,7 +19,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
   } from "@/components/ui/alert-dialog";
-import { Archive, Bookmark, Flag, Globe, GlobeLock, Lock, MoreHorizontal, X } from 'lucide-react';
+import { Trash2, Bookmark, Flag, Globe, GlobeLock, Lock, MoreHorizontal, X } from 'lucide-react';
 import Publication from './Publication ';
 
 interface PublicationActionsProps {
@@ -108,11 +108,11 @@ interface PublicationActionsProps {
         // Update UI state if needed (e.g., change save button appearance)
         // setSaved(true);
             
-        } catch (error) {
-          console.error('Erreur lors de l\'enregistrement de la publication:', error);
-          
-          // Show appropriate error message
-          if (error.message.includes('already saved')) {
+        } catch (error: unknown) {
+          const err = error as Error;
+          console.error('Erreur lors de l\'enregistrement de la publication:', err);
+        
+          if (err.message.includes('already saved')) {
             toast.warning('Publication déjà enregistrée', {
               description: 'Cette publication est déjà dans vos sauvegardes.',
             });
@@ -121,7 +121,8 @@ interface PublicationActionsProps {
               description: 'Veuillez réessayer plus tard.',
             });
           }
-        } finally {
+        }
+       finally {
           setUpdating(false);
           setSaveDialogOpen(false);
         }
@@ -149,7 +150,7 @@ interface PublicationActionsProps {
                     className="flex items-center space-x-2"
                     onSelect={(e) => e.preventDefault()}
                   >
-                    <Globe className="w-4 h-4 text-blue-500" />
+                    <Globe className="w-4 h-4 text-gray-500" />
                     <span>Modifier l'audience</span>
                   </DropdownMenuItem>
                 </AlertDialogTrigger>
@@ -169,7 +170,7 @@ interface PublicationActionsProps {
                       }`}
                       onClick={() => handleAudienceChange('Public')}
                     >
-                      <Globe className="w-5 h-5 text-blue-500" />
+                      <Globe className="w-5 h-5 text-gray-500" />
                       <span>Public</span>
                     </div>
                     <div 
@@ -255,6 +256,32 @@ interface PublicationActionsProps {
                     <AlertDialogCancel>Annuler</AlertDialogCancel>
                     <AlertDialogAction onClick={handleReportConfirm}>
                       Signaler
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog> 
+              {/* Supprimer la publication */}
+              <AlertDialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+                <AlertDialogTrigger asChild>
+                  <DropdownMenuItem 
+                    className="flex items-center space-x-2 text-red-500 hover:bg-red-50"
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Supprimer la publication</span>
+                  </DropdownMenuItem>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Supprimer cette publication</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Êtes-vous sûr de vouloir supprimer cette publication ? Cette action est irréversible.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleReportConfirm}>
+                      Supprimer
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

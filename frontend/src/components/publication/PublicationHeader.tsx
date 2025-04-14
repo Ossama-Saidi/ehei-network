@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
+import { BadgeCheck } from "lucide-react";
+
 interface User {
   id: number;
   nom: string;
   prenom: string;
   nomComplet: string;
+  role: string;
 }
+
 interface PublicationHeaderProps {
     id_user: number;
     date_publication: string;
@@ -53,12 +57,21 @@ interface PublicationHeaderProps {
         {loading ? (
           <p className="font-semibold text-sm animate-pulse">Loading...</p>
         ) : (
-          <p className="font-semibold text-sm">
-            {user ? user.nomComplet : `User ${id_user}`}
+          <p className="font-semibold text-sm flex items-center gap-1">
+            {user ? (
+              <>
+                {user.nomComplet}
+                {user.role !== "ETUDIANT" && (
+                  <BadgeCheck className="w-4 h-4 text-blue-600" />
+                )}
+              </>
+            ) : (
+              `User ${id_user}`
+            )}
           </p>
         )}
         <p className="text-xs text-gray-500">
-          🌐 Publiée {formatDistanceToNow(new Date(date_publication), { addSuffix: true })}
+          Publiée {formatDistanceToNow(new Date(date_publication), { addSuffix: true })}
         </p>
         </div>
       </div>
