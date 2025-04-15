@@ -1,4 +1,4 @@
-import ChatView from '@/components/ChatView';
+import ChatView from '@/components/chat/ChatView';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 export default function Chat() {

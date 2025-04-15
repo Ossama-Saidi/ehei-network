@@ -9,7 +9,7 @@ import { AuthGuard } from './auth.guard';
         name: 'USER_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: ['amqp://user:password@localhost:5672'],
+          urls: ['amqp://user:password@localhost:5673'],
           queue: 'auth_queue',
           queueOptions: {
             durable: true

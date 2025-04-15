@@ -19,7 +19,7 @@ import {
   BookOpen,
   Award
 } from 'lucide-react';
-import ChatView from '@/components/ChatView'; // Importation du composant de chat créé précédemment
+import ChatView from '@/components/chat/ChatView'; // Importation du composant de chat créé précédemment
 import { Card, CardContent } from './ui/card';
 import { Avatar } from './ui/avatar';
 
