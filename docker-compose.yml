@@ -4,8 +4,8 @@ services:
     container_name: rabbitmq
     hostname: rabbitmq
     ports:
-      - "5672:5672"   # Port standard pour l'API AMQP
-      - "15672:15672" # Port de l'interface de gestion web | Web management UI
+      - "5673:5672"   # Port standard pour l'API AMQP
+      - "15673:15672" # Port de l'interface de gestion web | Web management UI
       - "15692:15692"  # Prometheus metrics
     environment:
       - RABBITMQ_DEFAULT_USER=user     # Utilisateur par défaut
