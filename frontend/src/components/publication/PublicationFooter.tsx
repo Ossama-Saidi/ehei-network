@@ -2,7 +2,7 @@ import { MessageCircle, Send } from "lucide-react";
 import Comments from "../Comments";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
-import LikeButton from "../LikeButton";
+import LikeButton from "../buttons/LikeButton";
 import { useState } from "react";
 
 interface PublicationFooterProps {

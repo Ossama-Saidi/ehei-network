@@ -1,17 +1,21 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ModifyUserDto } from 'src/auth/dto/auth.dto';
+import { ModifyUserDto } from '../auth/dto/auth.dto'
 import * as bcrypt from 'bcrypt';
-import { FileUploadService } from '../file-upload/FileUploadService';
+// import { FileUploadService } from '../file-upload/FileUploadService';
+import { Inject } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 
 
 @Injectable()
 export class UserService {
   fileUploadService: any;
   constructor(private readonly prisma: PrismaService,
-  //private readonly fileUploadService: FileUploadService
+  @Inject('PUBLICATION_EVENTS_SERVICE') private readonly userEventsClient: ClientProxy
+
+  // private readonly fileUploadService: FileUploadService
   ) {}
-  
+
   /**
    * Get user by email
    * @param email - User email
@@ -25,17 +29,6 @@ export class UserService {
    */
   async getAllUsers() {
     return this.prisma.utilisateur.findMany();
-  }
-
-  /**
-   * Update user by ID
-   * @param userId - User ID
-   */
-  async updateUser(userId: number, updateUserDto: ModifyUserDto) {
-    return this.prisma.utilisateur.update({
-      where: { id: userId },
-      data: updateUserDto,
-    });
   }
 
   /**
@@ -63,16 +56,61 @@ export class UserService {
     }
 
     return user;
-  }
+  } 
+  
     /**
      * Modify user profile
      * @param userId - User ID
      * @param updateData - Data to update user profile
      */
-    async modify(userId: number, updateData: ModifyUserDto) {
-      return this.prisma.utilisateur.update({ where: { id: userId }, data: updateData });
+// <<<<<<< HEAD
+
+// =======
+// <<<<<<< HEAD
+//     async modify(userId: number, updateData: ModifyUserDto) {
+//       return this.prisma.utilisateur.update(
+//         { where: { id: userId }, 
+//           data: updateData }
+//       );
+// =======
+// >>>>>>> 1ee5433 (Sauvegarde temporaire avant rebase)
+    async updateUser(userId: number, updateData: ModifyUserDto) {
+      await this.prisma.utilisateur.update({ 
+        where: { id: userId }, 
+        data: updateData 
+      });
+      const updatedUser = await this.prisma.utilisateur.findUnique({ where: { id: userId } });
+      // Emit an event that a user was updated
+      this.userEventsClient.emit('user_updated', {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        nom: updatedUser.nom,
+        prenom: updatedUser.prenom,
+        role: updatedUser.role
+        // Include any other user fields needed by the publication service
+      });      
+      return updatedUser;
     }
-  
+  /**
+   * Update user by ID
+   * @param userId - User ID
+   */  
+  async modify(userId: number, updateData: ModifyUserDto) {
+    await this.prisma.utilisateur.update({ 
+      where: { id: userId }, 
+      data: updateData 
+    });
+    const updatedUser = await this.prisma.utilisateur.findUnique({ where: { id: userId } });
+    this.userEventsClient.emit('user_updated', {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          nom: updatedUser.nom,
+          prenom: updatedUser.prenom,
+          role: updatedUser.role
+          // Include any other user fields needed by the publication service
+        });  
+      return updatedUser;
+  }
     /**
      * Change user password
      * @param userId - User ID
@@ -296,7 +334,7 @@ export class UserService {
       throw new BadRequestException(`Failed to generate temporary upload URL: ${error.message}`);
     }
   }
-
+    
 }
  /* private readonly uploadDir = path.join(__dirname, '..', 'uploads'); // Use path.join
 

@@ -12,6 +12,8 @@ import {
   Param,
   Res,
   Req, 
+  UseGuards,
+  NotFoundException
 } from '@nestjs/common';
 import { PublicationService } from './publication.service';
 import { CreatePublicationDto } from './dto/create-publication.dto';
@@ -24,6 +26,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Audience } from '@prisma/client';
 // import { UpdateAudienceDto } from './dto/audience.dto';
+import { AuthGuard } from '../auth/auth.guard';
+import { CurrentUser } from '../auth/user.decorator';
+// import { UserCacheService } from '../users/user-cache.service';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
@@ -33,17 +38,22 @@ export class PublicationController {
   constructor(private readonly publicationService: PublicationService) {}
 
   @Post()
+  @UseGuards(AuthGuard)
   async create(
-    @Body() createPublicationDto: CreatePublicationDto,
+    @Body() createPublicationDto: CreatePublicationDto, 
+    @CurrentUser() user
   ) {
     try {
       console.log(createPublicationDto);
       return await this.publicationService.createPublication(
         createPublicationDto,
+        user.sub, // ✅ envoie l'id récupéré depuis le token vérifié
       );
     } catch (error) {
       // console.error('Error in createPublication:', error);
       throw new HttpException('Failed to create publication.', HttpStatus.INTERNAL_SERVER_ERROR);
+    } finally {
+      console.log(`Publication créée par l'utilisateur: ${user.email} ${user.sub}`);
     }
   }
   @Post('upload')

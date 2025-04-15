@@ -1,14 +1,82 @@
 // Barre latérale gauche
 // src/components/Sidebar.tsx
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { getDecodedToken, DecodedToken, getAuthToken, removeAuthToken } from '@/utils/authUtils';
+
 import { Home, User, Users, Bookmark, MessageCircle, Settings, Calendar, FileText, PlusCircle, User2, ChevronUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Avatar } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
-
+import router from 'next/router';
+interface UserProfile {
+  id?: string;
+  nom: string;
+  prenom: string;
+  email: string;
+  telephone: string;
+  role: string;
+  bio?: string;
+  profilePhoto?: string;
+  bannerPhoto?: string;
+  location?: string;
+  website?: string;
+  joinedDate?: string;
+  followers?: number;
+  following?: number;
+}
 export default function Sidebar() {
+  const [user, setUser] = useState<DecodedToken | null>(null);
+  const [userData, setUserData] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    const tokenData = getDecodedToken();
+    setUser(tokenData);
+  }, []);
+  // Fetch user profile data when component mounts
+    useEffect(() => {
+      const fetchUserProfile = async () => {
+        try {
+          const token = getAuthToken();
+          if (!token) {
+            router.push('/login');
+            return;
+          }
+          const response = await fetch('http://localhost:3001/user/profil', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+  
+          if (!response.ok) {
+            if (response.status === 401) {
+              removeAuthToken();
+              router.push('/login');
+              return;
+            }
+            throw new Error('Failed to fetch user profile');
+          }
+  
+          const result = await response.json();
+  
+          if (!result.success || !result.data) {
+            throw new Error('User data not found');
+          }
+  
+          setUserData(result.data);
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        }
+      };
+  
+      fetchUserProfile();
+    }, [router]);
   return (
     <div className="space-y-4">
       {/* Carte de profil */}
@@ -26,7 +94,7 @@ export default function Sidebar() {
           <div className="relative flex justify-center mt-[-24px]">
             <Avatar className="h-12 w-12 border-2 border-white bg-gray-300">
               <div className="h-full w-full rounded-full flex items-center justify-center text-gray-500">
-                <span className="text-2xl">O</span>
+              {user?.prenom?.charAt(0).toUpperCase() ?? 'U'}
               </div>
             </Avatar>
             <div className="absolute bottom-[-5px] right-[calc(50%-10px)]">
@@ -38,19 +106,8 @@ export default function Sidebar() {
           
           {/* Nom et titre */}
           <div className="text-center px-4 pt-2 pb-4">
-            <h3 className="font-semibold text-lg">Ossama Saidi</h3>
-            <p className="text-xs text-gray-600 mt-1">
-              4th-Year Software Engineering Student | Aspiring Software...
-            </p>
-            <p className="text-xs text-gray-600 mt-1">
-            📍 Nador Province, Oriental
-            </p>
-            <div className="flex items-center justify-center text-xs text-gray-600 mt-1">
-              <span className="flex items-center">
-                {/* <img src="/api/placeholder/16/16" alt="EHEI" className="h-4 w-4 mr-1" /> */}
-                🎓 EHEI Oujda
-              </span>
-            </div>
+            <h3 className="font-semibold text-lg">{user?.nomComplet ?? 'Utilisateur'}</h3>
+            <p className="text-xs text-gray-600 mt-1">{userData?.bio || 'No bio provided yet.'}</p>
           </div>
         </CardContent>
       </Card>

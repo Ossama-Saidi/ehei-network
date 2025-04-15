@@ -1,16 +1,59 @@
-/*Pour empêcher les utilisateurs non connectés d'accéder à la page d'accueil, 
-faut utiliser un middleware ou une logique côté serveur.*/
+// src/utils/authUtils.ts
+import { jwtDecode } from 'jwt-decode';
 
-
-// Utility functions for handling authentication tokens
-export const setAuthToken = (token: string): void => {
-  localStorage.setItem('authToken', token);
+export const setAuthToken = (token: string) => {
+  if (token) {
+    localStorage.setItem('token', token);
+  } else {
+    localStorage.removeItem('token');
+  }
 };
 
 export const getAuthToken = (): string | null => {
-  return localStorage.getItem('authToken');
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('token');
+  }
+  return null;
 };
 
-export const removeAuthToken = (): void => {
-  localStorage.removeItem('authToken');
+export const isAuthenticated = (): boolean => {
+  return !!getAuthToken();
+};
+
+export const removeAuthToken = () => {
+  localStorage.removeItem('token');
+};
+
+// Fonction utilitaire pour ajouter le token aux en-têtes des requêtes
+export const authHeader = () => {
+  const token = getAuthToken();
+  if (token) {
+    return { 'Authorization': `Bearer ${token}` };
+  }
+  return {};
+};
+
+export interface DecodedToken {
+  sub: number;
+  email: string;
+  role: string;
+  nomComplet: string;
+  nom: string;
+  prenom: string;
+  bio?: string;
+  badge?: string;
+  telephone?: string;
+}
+
+export const getDecodedToken = (): DecodedToken | null => {
+  const token = getAuthToken();
+  if (token) {
+    try {
+      return jwtDecode<DecodedToken>(token);
+    } catch (error) {
+      console.error('Invalid token format:', error);
+      return null;
+    }
+  }
+  return null;
 };

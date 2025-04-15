@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { PublicationModule } from './publication/publication.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PublicationSavesModule } from './publication-saves/publication-saves.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { PublicationSavesModule } from './publication-saves/publication-saves.mo
     }),
     PublicationModule,
     PrismaModule,
+    UsersModule,
     PublicationSavesModule,
   ],
   controllers: [AppController],

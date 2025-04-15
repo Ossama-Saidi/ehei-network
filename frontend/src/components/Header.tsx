@@ -1,11 +1,12 @@
 // src/components/Header.tsx
 
-import React from 'react';
+'use client';
 
 interface HeaderProps {
   className?: string;
 }
-
+import { useEffect, useState } from 'react';
+import { getDecodedToken, DecodedToken, getAuthToken, removeAuthToken } from '@/utils/authUtils';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -22,10 +23,27 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Settings, LogOut } from "lucide-react";
+import LogoutButton from './buttons/LogoutButton';
+import { useRouter } from 'next/navigation';
 // import Image from "next/image"
 // import { AspectRatio } from "@/components/ui/aspect-ratio"
 
 const Header: React.FC<HeaderProps> = ({ className }) => {
+  const [user, setUser] = useState<DecodedToken | null>(null);
+  const router = useRouter();
+
+    useEffect(() => {
+      const tokenData = getDecodedToken();
+      setUser(tokenData);
+    }, []);
+  
+  // Get initials for avatar fallback
+  const getInitials = () => {
+    if (user && user.nom && user.prenom) {
+      return `${user.prenom.charAt(0)}${user.nom.charAt(0)}`;
+    }
+    return 'U'; // Default fallback
+  };
   return (
     <header className={`bg-white shadow-sm shadow-gray-500/50 py-2 px-4${className}`}>
       <div className="container mx-auto flex justify-between items-center ">
@@ -112,15 +130,15 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="ml-2">
               <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>OS</AvatarFallback>
+                {/* <AvatarImage src="https://github.com/shadcn.png" /> */}
+                <AvatarFallback>{getInitials()}</AvatarFallback>
               </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/profil')}>
                 <User/>
                 <span>Profil</span>
               </DropdownMenuItem>
@@ -133,8 +151,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                 <span>Support</span>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Déconnexion</span>
+                <LogoutButton/>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

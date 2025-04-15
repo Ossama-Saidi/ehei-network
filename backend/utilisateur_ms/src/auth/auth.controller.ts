@@ -17,7 +17,11 @@ export class AuthController {
     return this.authService.login(credentials.email, credentials.password);
   }
   @MessagePattern({ cmd: 'verify_jwt' })
-  async verifyJwt(data: { token: string }) {
-    return this.authService.decodeToken(data.token);
+  async verifyToken(token: string ) {
+    console.log('[USER_SERVICE] 🔐 Received verify_jwt request');
+    const start = Date.now();
+    const response = await this.authService.verifyToken(token);
+    console.log('[USER_SERVICE] ✅ Token verified in', Date.now() - start, 'ms');
+    return response;
   }
 }

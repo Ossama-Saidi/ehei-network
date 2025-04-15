@@ -1,5 +1,8 @@
 // Page d'accueil (home)
 // src/app/page.tsx
+
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+
 import Sidebar from '@/components/Sidebar';
 import Feed from '@/components/Feed';
 import RightSidebar from '@/components/RightSidebar';
@@ -8,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function Home() {
   return (
+    <ProtectedRoute>
     <div className="flex flex-col max-h-screen">
       <Header className="w-full sticky top-0 z-50" />
       <div className="bg-gray-100 flex flex-col md:flex-row flex-1 px-2 md:px-8 lg:px-16 pt-4 pb-16 md:pb-4 overflow-hidden">
@@ -38,5 +42,6 @@ export default function Home() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }
