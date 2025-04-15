@@ -1,0 +1,20 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL") // Assurez-vous d'avoir une variable DATABASE_URL dans votre fichier .env
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Message {
+  id          Int      @id @default(autoincrement()) // Utilise Int et autoincrement pour auto-incrémentation
+  senderId    String
+  receiverId  String
+  content     String
+  date        DateTime @default(now())
+  isArchived  Boolean  @default(false)
+  isHidden    Boolean  @default(false)
+  type        String
+}
+
