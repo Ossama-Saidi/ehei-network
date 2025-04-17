@@ -41,6 +41,8 @@ function SearchPopover({ icon: Icon, placeholder, fetchUrl, onSelect }: { icon: 
                     ? 'nom'
                     : fetchUrl.includes('technologies')
                     ? 'nom'
+                    : fetchUrl.includes('clubs')
+                    ? 'nom'
                     : 'type'; // Par défaut pour les emplois
 
                 setOptions(data.map((item: Record<string, string>) => item[key]));
@@ -117,5 +119,5 @@ export function TechButton({ onSelect }: any) {
 }
 
 export function ClubButton({ onSelect }: any) {
-    return <SearchPopover icon={Users} placeholder="Rechercher une technologie..." fetchUrl="http://localhost:3003/api/publications/technologies" onSelect={onSelect}/>;
+    return <SearchPopover icon={Users} placeholder="Rechercher une clubs..." fetchUrl={`${process.env.NEXT_PUBLIC_API_URL}/publications/clubs`} onSelect={onSelect}/>;
 }

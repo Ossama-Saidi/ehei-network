@@ -21,15 +21,21 @@ model Publications {
   tags              String?
   audience          Audience
 
+  likeCount       Int     @default(0)
+  loveCount       Int     @default(0)
+  hahaCount       Int     @default(0)
+
   id_ville        Int?
   id_entreprise   Int?
   id_type_emploi  Int?
   id_technologie  Int?
+  id_club         Int?
 
   ville           Ville?       @relation(fields: [id_ville], references: [id_ville])
   entreprise      Entreprise?  @relation(fields: [id_entreprise], references: [id_entreprise])
   typeEmploi      TypeEmploi?  @relation(fields: [id_type_emploi], references: [id_type_emploi])
   technologie     Technologie? @relation(fields: [id_technologie], references: [id_technologie])
+  club            Clubs?       @relation(fields: [id_club], references: [id_club])
 
   publicationSaves           PublicationSaves[]
   publicationArchivesByAdmin PublicationArchivesByAdmin[]
@@ -70,6 +76,12 @@ model TypeEmploi {
   publications    Publications[]
 }
 
+model Clubs {
+  id_club        Int @id @default(autoincrement())
+  nom            String
+  ville          String
+  publications   Publications[]
+}
 
 model PublicationSaves {
   id_save        Int      @id @default(autoincrement())
@@ -113,7 +125,6 @@ model Reactions {
   id_user        Int
   reaction       Reaction
   
-  // Relations
   publication    Publications @relation(fields: [id_publication], references: [id_publication])
 
   @@index([id_user])
@@ -125,9 +136,8 @@ model Comments {
   id_user        Int
   id_publication Int
   contenu        String   @db.Text
-  date_comment   DateTime
+  date_comment   DateTime @default(now())
   
-  // Relations
   publication    Publications @relation(fields: [id_publication], references: [id_publication])
 
   @@index([id_user])
@@ -139,7 +149,6 @@ model PublicationHides {
   id_user        Int
   id_publication Int
   
-  // Relations
   publication    Publications @relation(fields: [id_publication], references: [id_publication], onDelete: Cascade)
 
   @@index([id_user])

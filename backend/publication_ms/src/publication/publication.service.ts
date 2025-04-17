@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreatePublicationDto } from './dto/create-publication.dto';
 import { Audience } from '@prisma/client';
 import { PublicationGateway } from './publication.gateway';
-import { UserCacheService } from '../users/user-cache.service';
+// import { UserCacheService } from '../users/user-cache.service';
 
 @Injectable()
 export class PublicationService {
@@ -13,59 +13,6 @@ export class PublicationService {
     private readonly publicationGateway: PublicationGateway,
     // private readonly userCacheService: UserCacheService,
   ) {}
-
-  // async findAll() {
-  //   const publications = await this.prisma.publications.findMany({
-  //     include: {
-  //       ville: true,
-  //       entreprise: true,
-  //       typeEmploi: true,
-  //       technologie: true,
-  //     }
-  //   });
-    
-  //   // Enrich with user data from cache
-  //   return publications.map(publication => {
-  //     const user = this.userCacheService.getUserById(publication.id_user);
-  //     return {
-  //       ...publication,
-  //       user: user ? {
-  //         id: user.id,
-  //         nomComplet: user.nomComplet,
-  //         role: user.role
-  //       } : null
-  //     };
-  //   });
-  // }
-  // async findOne(id: number) {
-  //   const publication = await this.prisma.publications.findUnique({
-  //     where: { id_publication: id },
-  //     include: {
-  //       ville: true,
-  //       entreprise: true,
-  //       typeEmploi: true,
-  //       technologie: true,
-  //       reactions: true,
-  //       comments: true,
-  //     }
-  //   });
-
-  //   if (!publication) {
-  //     return null;
-  //   }
-
-  //   // Get user data from cache
-  //   const user = this.userCacheService.getUserById(publication.id_user);
-    
-  //   return {
-  //     ...publication,
-  //     user: user ? {
-  //       id: user.id,
-  //       nomComplet: user.nomComplet,
-  //       role: user.role
-  //     } : null
-  //   };
-  // }
 
   async createPublication(data: CreatePublicationDto, userId: number) {
     try {
@@ -250,19 +197,104 @@ export class PublicationService {
       throw new Error('Failed to fetch technologies.');
     }
   }
-  // findAll() {
-  //   return `This action returns all publication`;
-  // }
+  async getClubs() {
+    try {
+      return await this.prisma.clubs.findMany({
+        select: { nom: true }
+      });
+    } catch (error) {
+      console.error('Error fetching clubs:', error);
+      throw new Error('Failed to fetch clubs.');
+    }
+  }
+ /**
+ * Get all publications for a specific user
+ * @param userId - The ID of the user whose publications to retrieve
+ * @returns Array of publications belonging to the user
+ */
+async getUserPublications(userId: number) {
+  try {
+    if (!userId) {
+      throw new HttpException('User ID is required', HttpStatus.BAD_REQUEST);
+    }
+    
+    const userPublications = await this.prisma.publications.findMany({
+      where: {
+        id_user: userId
+      },
+      include: {
+        // Include related data if needed
+        ville: true,
+        entreprise: true,
+        typeEmploi: true,
+        technologie: true
+      },
+      orderBy: {
+        date_publication: 'desc' // Sort by newest first
+      }
+    });
+    
+    console.log(`Retrieved ${userPublications.length} publications for user ID: ${userId}`);
+    return userPublications;
+  } catch (error) {
+    console.error('Error fetching user publications:', error);
+    throw new HttpException(
+      error.message || 'Failed to fetch user publications', 
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
+  }
+}
+/**
+ * Delete a publication belonging to a user
+ * @param publicationId - The ID of the publication to delete
+ * @param userId - The ID of the user who owns the publication
+ * @returns The deleted publication object
+ */
+async deletePublication(publicationId: number, userId: number) {
+  try {
+    // First check if the publication exists and belongs to the user
+    const publication = await this.prisma.publications.findUnique({
+      where: { id_publication: publicationId }
+    });
 
-  // findOne(id: number) {
-  //   return `This action returns a #${id} publication`;
-  // }
+    if (!publication) {
+      throw new HttpException('Publication not found', HttpStatus.NOT_FOUND);
+    }
 
-  // update(id: number, updatePublicationDto: UpdatePublicationDto) {
-  //   return `This action updates a #${id} publication`;
-  // }
+    if (publication.id_user !== userId) {
+      throw new HttpException('Not authorized to delete this publication', HttpStatus.FORBIDDEN);
+    }
 
-  // remove(id: number) {
-  //   return `This action removes a #${id} publication`;
-  // }
+    // Use a transaction to ensure data consistency
+    return await this.prisma.$transaction(async (prisma) => {
+      // First delete all saved entries for this publication
+      const deletedSaves = await prisma.publicationSaves.deleteMany({
+        where: { id_publication: publicationId }
+      });
+      
+      console.log(`Deleted ${deletedSaves.count} saved entries for publication ${publicationId}`);
+      
+      // Then delete the publication itself
+      const deletedPublication = await prisma.publications.delete({
+        where: { id_publication: publicationId }
+      });
+
+      // Optionally notify connected clients about the deletion
+      this.publicationGateway.server.emit('deletedPublication', { id_publication: publicationId });
+
+      console.log(`Publication ${publicationId} deleted by user ${userId}`);
+      return deletedPublication;
+    });
+
+  } catch (error) {
+    console.error('Error deleting publication:', error);
+    if (error instanceof HttpException) {
+      throw error;
+    }
+    throw new HttpException(
+      'Failed to delete publication', 
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
+  }
+}
 }

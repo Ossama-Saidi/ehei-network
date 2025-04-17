@@ -41,7 +41,8 @@ export default function CreatePublication ({ open, setImage, setOpen,description
         city: null,
         company: null,
         job: null,
-        tech: null
+        tech: null,
+        club: null
     });
     const [highlight, setHighlight] = useState(false); // Track highlight state
     const [selectedTags, setSelectedTags] = useState([]);
@@ -77,7 +78,7 @@ export default function CreatePublication ({ open, setImage, setOpen,description
         } 
         
         // For city, company, and job, append them as hashtags with special styling
-        if (["city", "company", "job", "tech"].includes(type)) {
+        if (["city", "company", "job", "tech", "club"].includes(type)) {
             const formattedTag = `#${value.replace(/\s+/g, "_")}`;
             setSelectedTags((prevTags): any => [...prevTags, formattedTag]);
             setHighlight(true);
@@ -146,7 +147,7 @@ export default function CreatePublication ({ open, setImage, setOpen,description
                                     <TechButton onSelect={(value: string) => handleSelection("tech", value)} />
                                 </>
                                 ) : (
-                                    <ClubButton onSelect={(value: string) => handleSelection("tech", value)} />
+                                    <ClubButton onSelect={(value: string) => handleSelection("club", value)} />
                                 )}
                             </div>
                         </div>

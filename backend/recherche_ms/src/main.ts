@@ -12,8 +12,8 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization']
   });
 
-  await app.listen(3001); // Port du backend
-  console.log(`🚀 Backend démarré sur http://localhost:3001`);
+  await app.listen(3006); // Port du backend
+  console.log(`🚀 Backend démarré sur http://localhost:3006`);
 }
 
 bootstrap();

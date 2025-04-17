@@ -5,6 +5,7 @@ import {
   Body, 
   Put, 
   Patch, 
+  Delete,
   HttpException, 
   HttpStatus, 
   Query, 
@@ -205,6 +206,20 @@ async debugUploads() {
       throw new Error('Failed to fetch publication.');
     }
   }
+
+  // ----------- get tous publications d'un user -----------
+  @Get('user/:userId')
+  async getUserPublications(@Param('userId') userId: string) {
+    try {
+      return await this.publicationService.getUserPublications(Number(userId));
+    } catch (error) {
+      console.error('Error fetching user publications:', error);
+      throw new HttpException(
+        error.message || 'Failed to fetch user publications',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
   @Get('searchtags')
   async searchPublicationsByTag(@Query('tag') tag:string) { 
     try {
@@ -219,6 +234,14 @@ async debugUploads() {
       return await this.publicationService.getCities();
     } catch (error) {
       throw new HttpException('Failed to fetch cities.', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+  @Get('clubs')
+  async getClubs() {
+    try {
+      return await this.publicationService.getClubs();
+    } catch (error) {
+      throw new HttpException('Failed to fetch clubs.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
   @Get('emojis')
@@ -306,23 +329,29 @@ async debugUploads() {
       }
     }
   }
-  // @Get()
-  // findAll() {
-  //   return this.publicationService.findAll();
-  // }
-
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.publicationService.findOne(+id);
-  // }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updatePublicationDto: UpdatePublicationDto) {
-  //   return this.publicationService.update(+id, updatePublicationDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.publicationService.remove(+id);
-  // }
+  @Delete(':id')
+  @UseGuards(AuthGuard)
+  async deletePublication(
+    @Param('id') publicationId: string,
+    @Req() request
+  ) {
+    try {
+      // Assuming you have authentication middleware that adds user info to request
+      const userId = request.user.sub; // Adjust based on your auth implementation
+      
+      return await this.publicationService.deletePublication(
+        Number(publicationId),
+        userId
+      );
+    } catch (error) {
+      console.error('Error deleting publication:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Failed to delete publication', 
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
 }
