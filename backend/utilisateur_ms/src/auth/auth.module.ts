@@ -14,7 +14,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         name: 'PUBLICATION_EVENTS_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: ['amqp://user:password@localhost:5672'],
+          urls: ['amqp://user:password@localhost:5673'],
           queue: 'user_events_queue', // 📢 This is the queue to emit events to
           queueOptions: {
             durable: true,

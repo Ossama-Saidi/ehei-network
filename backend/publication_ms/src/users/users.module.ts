@@ -12,7 +12,7 @@ import { UsersController } from './users.controller';
         name: 'USER_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: ['amqp://user:password@localhost:5672'],
+          urls: ['amqp://user:password@localhost:5673'],
           queue: 'user_events_queue',
           queueOptions: {
             durable: true
