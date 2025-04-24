@@ -57,6 +57,24 @@ export class PublicationController {
       console.log(`Publication créée par l'utilisateur: ${user.email} ${user.sub}`);
     }
   }
+  @Post('report/:id') // id = publication ID
+  @UseGuards(AuthGuard)
+  async reportPublication(
+    @Param('id') publicationId: string,
+    @CurrentUser() user,
+  ) {
+    return this.publicationService.reportPublication(Number(publicationId), user.sub);
+  }
+  @Post('reported-posts/:id/archive')
+  async archiveReportedPost(@Param('id') id: string) {
+    return this.publicationService.archiveReportedPost(Number(id));
+  }
+
+  @Get('reported-posts')
+  async getReportedPosts() {
+    return this.publicationService.getReportedPosts();
+  }
+  
   @Post('upload')
   @UseInterceptors(
     FileFieldsInterceptor([

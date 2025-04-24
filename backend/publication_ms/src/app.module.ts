@@ -8,6 +8,7 @@ import { PublicationSavesModule } from './publication-saves/publication-saves.mo
 import { UsersModule } from './users/users.module';
 import { ReactionModule } from './reaction/reaction.module';
 import { CommentModule } from './comment/comment.module';
+import { VilleModule } from './ville/ville.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { CommentModule } from './comment/comment.module';
     PublicationSavesModule,
     ReactionModule,
     CommentModule,
+    VilleModule,
   ],
   controllers: [AppController],
   providers: [AppService],

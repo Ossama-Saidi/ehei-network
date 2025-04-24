@@ -57,6 +57,47 @@ export class PublicationService {
       throw new HttpException('Failed to create publication.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+  async reportPublication(publicationId: number, userId: number) {
+    return this.prisma.publicationArchivesByAdmin.create({
+      data: {
+        id_user: userId,
+        id_publication: publicationId,
+        status: false, // pas encore traité
+      },
+    });
+  }
+  
+  async archiveReportedPost(publicationId: number) {
+    // mettre à jour l'enregistrement existant au lieu de le créer
+    await this.prisma.publicationArchivesByAdmin.updateMany({
+      where: {
+        id_publication: publicationId,
+        status: false,
+      },
+      data: {
+        status: true,
+      },
+    });
+  
+    // puis supprimer la publication de la table principale
+    await this.prisma.publications.delete({
+      where: { id_publication: publicationId },
+    });
+  
+    return { message: 'Publication archived and deleted successfully.' };
+  }
+  
+  async getReportedPosts() {
+    return this.prisma.publicationArchivesByAdmin.findMany({
+      where: {
+        status: false,
+      },
+      include: {
+        publication: true, // permet d’avoir le contenu à vérifier
+      },
+    });
+  }
+  
   async updatePublicationAudience(
     id_publication: number, 
     id_user: number,
@@ -297,4 +338,5 @@ async deletePublication(publicationId: number, userId: number) {
     );
   }
 }
+
 }

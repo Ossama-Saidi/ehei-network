@@ -33,6 +33,7 @@
     "@nestjs/platform-fastify": "latest",
     "@nestjs/platform-socket.io": "^11.0.12",
     "@nestjs/serve-static": "^5.0.3",
+    "@nestjs/swagger": "^11.1.5",
     "@nestjs/websockets": "^11.0.12",
     "amqp-connection-manager": "^4.1.14",
     "amqplib": "^0.10.7",
@@ -45,7 +46,8 @@
     "redis": "^4.7.0",
     "reflect-metadata": "latest",
     "rxjs": "^7.8.2",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@nestjs/cli": "latest",
@@ -98,6 +100,7 @@
       "@nestjs/core",
       "@prisma/client",
       "@prisma/engines",
+      "@scarf/scarf",
       "esbuild",
       "prisma"
     ]

@@ -99,9 +99,9 @@ model PublicationArchivesByAdmin {
   id_archive     Int      @id @default(autoincrement())
   id_user        Int
   id_publication Int
-  
+  status         Boolean     @default(false)
   // Relations
-  publication    Publications @relation(fields: [id_publication], references: [id_publication])
+  publication Publications @relation(fields: [id_publication], references: [id_publication], onDelete: Cascade)
 
   @@index([id_user])
   @@index([id_publication])
