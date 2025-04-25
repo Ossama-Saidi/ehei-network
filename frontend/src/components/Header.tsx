@@ -10,7 +10,8 @@ import { getDecodedToken, DecodedToken, getAuthToken, removeAuthToken } from '@/
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Bell, Users, Home, User2, UserPlus, ThumbsUp, CircleHelp } from 'lucide-react';
+import { Search, Bell, MessageSquare, Users, Home, User2, UserPlus, ThumbsUp, CircleHelp} from 'lucide-react';
+import MessageButton from './chat/MessageButton';
 import { User } from './user';
 import {
   Sheet,
@@ -74,6 +75,11 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
           <Button variant="ghost" size="icon" className="md:hidden">
             <Search className="h-5 w-5" />
           </Button>
+
+
+          
+
+
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="bigicon">
@@ -124,6 +130,13 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
               </div>
             </SheetContent>
           </Sheet>
+          
+             {/* Message Icon */}
+          <Button variant="ghost" size="icon">
+            <MessageSquare className="h-12 w-12" />
+          </Button>
+          
+
           {/* <User /> */}
           {/* User Profile Dropdown */}
           <DropdownMenu>

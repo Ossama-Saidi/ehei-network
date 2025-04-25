@@ -14,7 +14,8 @@ model Message {
   content     String
   date        DateTime @default(now())
   isArchived  Boolean  @default(false)
-  isHidden    Boolean  @default(false)
+   
+  isHidden     Boolean  @default(false)
   type        String
 }
 

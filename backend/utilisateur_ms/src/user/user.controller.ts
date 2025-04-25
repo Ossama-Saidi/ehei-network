@@ -204,5 +204,10 @@ export class UserController {
       throw new BadRequestException(error.message);
     }
   }
+  @Get('search')
+  async search(@Query('query') query: string) {
+    return this.userService.searchUserByNomPrenom(query);
+  }
+  
 }
 

@@ -1,14 +1,27 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs'; // ✅ Import de fs pour vérifier et créer le dossier
+import { NestExpressApplication } from '@nestjs/platform-express'; // ✅ Import nécessaire
+import * as express from 'express'; // Import express pour utiliser le middleware statique
 
- 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule); // ✅ Cast ici
 
-  // Récupère le port depuis les variables d'environnement ou utilise le port 3000 par défaut
+  // Créer automatiquement le dossier 'uploads' s'il n'existe pas
+  const uploadDir = join(__dirname, '..', 'uploads');
+  if (!existsSync(uploadDir)) {
+    mkdirSync(uploadDir);
+    console.log('Dossier "uploads" créé automatiquement.');
+  } else {
+    console.log('Le dossier "uploads" existe déjà.');
+  }
+
+  app.enableCors();
+
   const port = process.env.PORT ?? 3003;
-  // Configurer l'application comme microservice
+
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
     options: {
@@ -17,13 +30,13 @@ async function bootstrap() {
     },
   });
 
-  // Démarre l'application
-  await app.listen(port);
-    // Démarrer tous les microservices
+  // Middleware pour servir les fichiers statiques depuis le dossier 'uploads'
+  app.use('/uploads', express.static(uploadDir));
 
   await app.startAllMicroservices();
+  await app.listen(port);
 
-  // Affiche l'URL dans la consol
   console.log(`Application is running on: http://localhost:${port}`);
 }
+
 bootstrap();

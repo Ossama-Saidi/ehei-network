@@ -334,8 +334,37 @@ export class UserService {
       throw new BadRequestException(`Failed to generate temporary upload URL: ${error.message}`);
     }
   }
-    
-}
+  /**
+ * Search users by name and surname
+ * @param nom - Last name (nom)
+ * @param prenom - First name (prenom)
+ */
+  async searchUserByNomPrenom(query: string) {
+    const users = await this.prisma.utilisateur.findMany({
+      where: {
+        OR: [
+          { nom: { contains: query  } },
+          { prenom: { contains: query } },
+        ],
+      },
+      select: {
+        id: true,
+        prenom: true,
+        nom: true,
+        email: true,
+        telephone: true,
+        profilePhoto: true,
+        role: true,
+      },
+    });
+  
+    if (!users.length) {
+      throw new NotFoundException('Aucun utilisateur trouvé');
+    }
+  
+    return users;
+  }
+}  
  /* private readonly uploadDir = path.join(__dirname, '..', 'uploads'); // Use path.join
 
   async uploadBanner(file: Express.Multer.File, updateData: ModifyUserDto): Promise<string> {
