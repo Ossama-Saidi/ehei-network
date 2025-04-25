@@ -6,10 +6,11 @@ import { NotificationGateway } from '../../../notification_ms/src/notification/n
 
 @Injectable()
 export class MessagesService {
+  messageRepository: any;
   constructor(
     private readonly prisma: PrismaService,
     // private readonly jwtService: JwtService,
-    private readonly notificationGateway: NotificationGateway,
+   private readonly notificationGateway: NotificationGateway,
   ) {}
 
   /*async verifyToken(token: string): Promise<any> {
@@ -21,37 +22,58 @@ export class MessagesService {
   }*/
 
   async sendMessage(senderId: string, receiverId: string, content: string, type: string): Promise<Message> {
-    try {
-      const message = await this.prisma.message.create({
-        data: { senderId, receiverId, content, type },
-      });
+  try {
+    // Création du message dans la base de données
+    const message = await this.prisma.message.create({
+      data: {
+        senderId,
+        receiverId,
+        content,
+        type, // Le type du message, soit 'text' soit 'file'
+      },
+    });
 
-      // ✅ Utilise la méthode centralisée du gateway
-      this.notificationGateway.sendToUser(receiverId, 'newMessage', { senderId, content });
+    // Envoi de la notification selon le type du message
+    this.notificationGateway.sendToUser(receiverId, 'newMessage', {
+      senderId,
+      content,
+      type,  // Inclure le type de message dans la notification
+    });
 
-      return message;
-    } catch (error) {
-      console.error('Erreur lors de l’envoi du message:', error);
-      throw new Error('Impossible d’envoyer le message.');
-    }
+    return message;
+  } catch (error) {
+    console.error('Erreur lors de l’envoi du message:', error);
+    throw new Error('Impossible d’envoyer le message.');
   }
+}
 
+  
   async getMessagesBetweenUsers(senderId: string, receiverId: string): Promise<Message[]> {
     return this.prisma.message.findMany({
       where: {
+        isArchived: false, // ✅ Exclure tous les messages archivés
         OR: [
-          { senderId, receiverId },
-          { senderId: receiverId, receiverId: senderId },
+          // Cas où l'utilisateur est l'expéditeur
+          {
+            senderId,
+            receiverId,
+            isHidden: false,
+          },
+          // Cas où l'utilisateur est le destinataire
+          {
+            senderId: receiverId,
+            receiverId: senderId,
+            // Pas besoin de filtre sur isHidden ici
+          },
         ],
-        isArchived: false,
-        isHidden: false,
       },
       orderBy: {
-        date: 'desc',
+        date: 'asc',
       },
     });
   }
-
+  
+  
   async updateMessageBySender(
     messageId: string,
     senderId: string,
@@ -111,4 +133,37 @@ export class MessagesService {
       data: { isHidden: true },
     });
   }
-}
+
+
+  // messages.service.ts
+  async getLastMessageBetweenUsers(senderId: string, receiverId: string): Promise<Message | null> {
+    const lastMessage = await this.prisma.message.findFirst({
+      where: {
+        isArchived: false, // Assure-toi de ne pas récupérer des messages archivés
+        OR: [
+          {
+            senderId,
+            receiverId,
+            isHidden: false,
+          },
+          {
+            senderId: receiverId,
+            receiverId: senderId,
+            isHidden: false,
+          },
+        ],
+      },
+      orderBy: {
+        date: 'desc', // Trie par date décroissante pour avoir le dernier message
+      },
+    });
+  
+    return lastMessage; // Retourne le dernier message ou null s'il n'y en a pas
+  }
+  
+  }
+  
+  
+  
+
+

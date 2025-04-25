@@ -28,12 +28,13 @@ export const removeAuthToken = () => {
 export const authHeader = () => {
   const token = getAuthToken();
   if (token) {
-    return { 'Authorization': `Bearer ${token}` };
+    return { 'Authorization': `Bearer ${token}`};
   }
   return {};
 };
 
 export interface DecodedToken {
+  id: string;
   sub: number;
   email: string;
   role: string;

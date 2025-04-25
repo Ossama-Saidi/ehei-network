@@ -1,22 +1,27 @@
-import { Controller, Post,Put, Get,Patch,NotFoundException ,HttpException, HttpStatus, Body, Param, UseGuards  } from '@nestjs/common';
+import { Controller, Post,Put, Get,Patch,NotFoundException ,HttpException, HttpStatus, Body, Param, UseGuards, UseInterceptors, UploadedFile  } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { Message } from '@prisma/client';
 import { AuthGuard } from '../auth/auth.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
 @Controller('messages')
 export class MessagesController {
+  messageService: any;
   constructor(private readonly messagesService: MessagesService) {}
 
   // Route pour envoyer un message
   @Post('send')
-  @UseGuards(AuthGuard) 
+@UseGuards(AuthGuard)
 async sendMessage(
   @Body('senderId') senderId: string,
   @Body('receiverId') receiverId: string,
   @Body('content') content: string,
   @Body('type') type: string,
+   
 ) {
-  const message = await this.messagesService.sendMessage(senderId, receiverId, content, type);
+  const message = await this.messagesService.sendMessage(senderId, receiverId, content, type,);
 
   if (message) {
     return {
@@ -25,10 +30,50 @@ async sendMessage(
       data: message,
     };
   } else {
-    
     throw new HttpException('Message not created', HttpStatus.BAD_REQUEST);
   }
 }
+
+
+@Post('send-file')
+@UseGuards(AuthGuard)
+@UseInterceptors(
+  FileInterceptor('file', {
+    storage: diskStorage({
+      destination: './uploads', // 📂 Dossier où les fichiers seront stockés
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const ext = extname(file.originalname);
+        cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+      },
+    }),
+  }),
+)
+async sendFileMessage(
+  @UploadedFile() file: Express.Multer.File,
+  @Body('senderId') senderId: string,
+  @Body('receiverId') receiverId: string,
+) {
+  if (!file) {
+    throw new HttpException('Aucun fichier envoyé', HttpStatus.BAD_REQUEST);
+  }
+
+  const fileUrl = `/uploads/${file.filename}`;
+
+  const message = await this.messagesService.sendMessage(
+    senderId,
+    receiverId,
+    fileUrl,
+    'file', // 🔑 Le type ici est 'file'
+  );
+
+  return {
+    statusCode: HttpStatus.CREATED,
+    message: 'Fichier envoyé avec succès',
+    data: message,
+  };
+}
+
 
  // Route pour récupérer les messages d'un utilisateur
 @Get('conversation/:senderId/:receiverId')
@@ -104,18 +149,43 @@ async searchMessagesByContent(@Body() body: { content: string }) {
       message: 'Message archivé avec succès', data: message };
    }
 
-   @Patch('hide/:id') // L'ID est passé dans l'URL
-   @UseGuards(AuthGuard) 
-   async hideMessage(@Param('id') id: string) {
-     const message = await this.messagesService.hideMessage(Number(id));
+   @Patch('hide/:id') 
+@UseGuards(AuthGuard) 
+async hideMessage(@Param('id') id: string) {
+  const message = await this.messagesService.hideMessage(Number(id));
+
+  if (!message) {
+    throw new NotFoundException('Message non trouvé');
+  }
+
+  return { 
+    statusCode: HttpStatus.OK,
+    message: 'Message caché avec succès', 
+    data: message 
+  };
+}
+
+@Get('last-message/:senderId/:receiverId')
+@UseGuards(AuthGuard)
+async getLastMessageBetweenUsers(
+  @Param('senderId') senderId: string,
+  @Param('receiverId') receiverId: string,
+): Promise<{ status: string; data?: Message }> {
+  const lastMessage = await this.messagesService.getLastMessageBetweenUsers(senderId, receiverId);
+
+  if (lastMessage) {
+    return {
+      status: 'OK',
+      data: lastMessage,
+    };
+  }
+
+  return {
+    status: 'NOT_FOUND',
+     
+  };
+}
+
  
-     if (!message) {
-       throw new NotFoundException('Message non trouvé');
-     }
- 
-     return { 
-      statusCode: HttpStatus.OK,
-      message: 'Message caché avec succès', data: message };
-   }
- 
- }
+
+}
