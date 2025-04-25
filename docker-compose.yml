@@ -33,3 +33,75 @@ services:
 volumes:
   rabbitmq_data:
   grafana_data:
+
+  # Microservices backend
+  # group_ms:
+  #   build: ./backend/group_ms
+  #   container_name: group_ms
+  #   depends_on:
+  #     - rabbitmq
+  #   networks:
+  #     - ehei-network
+
+  # messagerie_ms:
+  #   build: ./backend/messagerie_ms
+  #   container_name: messagerie_ms
+  #   depends_on:
+  #     - rabbitmq
+  #   networks:
+  #     - ehei-network
+
+  # notification_ms:
+  #   build: ./backend/notification_ms
+  #   container_name: notification_ms
+  #   depends_on:
+  #     - rabbitmq
+  #   networks:
+  #     - ehei-network
+
+  # publication_ms:
+  #   build: ./backend/publication_ms
+  #   container_name: publication_ms
+  #   ports:
+  #     - "3003:3003"
+  #   depends_on:
+  #     - rabbitmq
+  #   networks:
+  #     - ehei-network
+
+  # recherche_ms:
+  #   build: ./backend/recherche_ms
+  #   container_name: recherche_ms
+  #   depends_on:
+  #     - rabbitmq
+  #   networks:
+  #     - ehei-network
+
+  # utilisateur_ms:
+  #   build: ./backend/utilisateur_ms
+  #   container_name: utilisateur_ms
+  #   depends_on:
+  #     - rabbitmq
+  #   networks:
+  #     - ehei-network
+
+  # Frontend
+  # frontend:
+  #   build: ./frontend
+  #   container_name: frontend
+  #   ports:
+  #     - "3000:3000"
+  #   # depends_on:
+  #   #   - publication_ms
+  #   #   - utilisateur_ms
+  #   #   - notification_ms
+  #   networks:
+  #     - ehei-network
+
+# volumes:
+#   rabbitmq_data:
+#   grafana_data:
+
+# networks:
+#   ehei-network:
+#     driver: bridge

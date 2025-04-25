@@ -7,6 +7,8 @@ import { PrismaService } from './prisma/prisma.service';
 import { UserModule } from './user/user.module';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { AdminModule } from './admin/admin.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -23,7 +25,9 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
           port: 4002,
         },
       },
-    ]),    
+    ]),
+    AdminModule,
+    MailModule,    
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

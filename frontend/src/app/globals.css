@@ -148,3 +148,53 @@
     }
   }
 }
+
+
+@font-face {
+  font-family: 'Klavika';
+  src: url('/fonts/klavika/klavika-light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Klavika';
+  src: url('/fonts/klavika/klavika-light-italic.otf') format('opentype');
+  font-weight: 300;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Klavika';
+  src: url('/fonts/klavika/klavika-regular-italic.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Klavika';
+  src: url('/fonts/klavika/klavika-medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Klavika';
+  src: url('/fonts/klavika/klavika-medium-italic.otf') format('opentype');
+  font-weight: 500;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Klavika';
+  src: url('/fonts/klavika/klavika-bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Klavika';
+  src: url('/fonts/klavika/klavika-bold-italic.otf') format('opentype');
+  font-weight: 700;
+  font-style: italic;
+}

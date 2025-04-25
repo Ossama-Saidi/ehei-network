@@ -127,13 +127,19 @@ export default function AuthForm() {
 
       // Store the authentication token using the utility function
       if (responseData.token) {
+        // Cas connexion : token reçu
         setAuthToken(responseData.token);
+        toast.success('Connexion réussie !');
+        router.push('/');
+      } else if (isRegister && responseData.message) {
+        // Cas inscription sans token : message d’attente admin
+        toast.success(responseData.message);
+        router.push('/home'); // ou une page “Merci” si tu préfères
       } else {
-        console.error('No token received from server');
         toast.error('Problème d\'authentification. Veuillez réessayer.');
-        setIsLoading(false);
-        return;
       }
+      
+      
 
       toast.success(isRegister ? 'Inscription réussie !' : 'Connexion réussie !');
       router.push(isRegister ? '/profil' : '/');
@@ -331,7 +337,7 @@ export default function AuthForm() {
               <SelectContent>
                 <SelectItem value="ETUDIANT">Etudiant</SelectItem>
                 <SelectItem value="PROFESSEUR">Professeur</SelectItem>
-                <SelectItem value="ADMINISTRATEUR">Diplômé</SelectItem>
+                <SelectItem value="DIPLOME">Diplômé</SelectItem>
               </SelectContent>
             </Select>
           </div>  

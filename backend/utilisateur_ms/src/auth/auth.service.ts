@@ -6,6 +6,7 @@ import { RegisterDto } from './dto/auth.dto';
 import { ClientProxy } from '@nestjs/microservices';
 // import * as jwt from 'jsonwebtoken';
 import { Inject } from '@nestjs/common';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -14,7 +15,9 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     @Inject('PUBLICATION_EVENTS_SERVICE') 
-    private readonly userEventsClient: ClientProxy
+    private readonly userEventsClient: ClientProxy,
+    private readonly mailService: MailService,
+
   ) {}
 
   async verifyToken(token: string) {
@@ -42,22 +45,68 @@ export class AuthService {
     if (existingUser) throw new UnauthorizedException('Email already exists');
     const hashedPassword = await bcrypt.hash(data.password, 10);
     const user = await this.prisma.utilisateur.create({
-      data: { ...data, password: hashedPassword },
+      data: {
+        ...data,
+        password: hashedPassword,
+        is_approved: false // 🔒 par défaut non approuvé
+      },
     });
     // Generate the token as you were doing before
-    const token = this.generateToken(user);
+    // const token = this.generateToken(user);
         
+    // // Émettre un événement pour notifier l'admin
+    // this.userEventsClient.emit('user.pending_approval', {
+    //   id: user.id,
+    //   email: user.email,
+    //   nom: user.nom,
+    //   prenom: user.prenom,
+    //   role: user.role,
+    // });
+
     // Emit an event that a user was created
-    this.userEventsClient.emit('user_created', {
-      id: user.id,
-      email: user.email,
-      nom: user.nom,
-      prenom: user.prenom,
-      role: user.role,
-      // Include any other user fields needed by the publication service
-    });    
-    return { user, token };
+    // this.userEventsClient.emit('user_created', {
+    //   id: user.id,
+    //   email: user.email,
+    //   nom: user.nom,
+    //   prenom: user.prenom,
+    //   role: user.role,
+    //   // Include any other user fields needed by the publication service
+    // });    
+    // return { user, token };
+    // ⚠️ Pas de token retourné ici !
+    return {
+      message: "Votre compte a été créé et est en attente de validation par l'administrateur."
+    };
   }
+/**
+   * Appelé par l'admin pour approuver un utilisateur
+   * et lui envoyer son token
+   */
+async approveUser(id: string) {
+  const user = await this.prisma.utilisateur.update({
+    where: { id: parseInt(id) }, // 🛠 conversion ici
+    data: { is_approved: true },
+  });
+
+  const token = this.generateToken(user);
+
+  // Événement vers les autres microservices (par ex: publication)
+  this.userEventsClient.emit('user_created', {
+    id: user.id,
+    email: user.email,
+    nom: user.nom,
+    prenom: user.prenom,
+    role: user.role,
+  });
+
+  // ✉️ Envoi de l'e-mail de validation
+  await this.mailService.sendValidationEmail(user.email);
+
+  return {
+    message: 'Utilisateur approuvé, email de connexion envoyé.',
+    token, // pour debug ou logs
+  };
+}
 
   /**
    * Login user
@@ -66,11 +115,24 @@ export class AuthService {
    */
   async login(email: string, password: string) {
     const user = await this.prisma.utilisateur.findUnique({ where: { email } });
+  
+    // Vérifier si l'utilisateur existe et si le mot de passe est correct
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Email ou mot de passe incorrect');
     }
-    return { user, token: this.generateToken(user) };
+  
+    // 🔒 Vérifier si le compte est approuvé
+    if (!user.is_approved) {
+      throw new UnauthorizedException("Votre compte est en attente d'approbation par l'administrateur.");
+    }
+  
+    // ✅ Génération du token uniquement si approuvé
+    return {
+      user,
+      token: this.generateToken(user),
+    };
   }
+  
 //--------------------------------------------
 //---------- LOOK HERE IMPORTANTE-------------
 //--------------------------------------------

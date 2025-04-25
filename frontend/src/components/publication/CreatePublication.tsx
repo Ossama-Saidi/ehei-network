@@ -140,11 +140,11 @@ export default function CreatePublication ({ open, setImage, setOpen,description
                             <div className="flex gap-2">
                                 <EmojiButton onSelect={(value: string) => handleSelection("emoji", value)} />
                                 <CityButton onSelect={(value: string) => handleSelection("city", value)} />
+                                <TechButton onSelect={(value: string) => handleSelection("tech", value)} />
                                 {role !== "ETUDIANT" ? (
                                 <>
                                     <CompanyButton onSelect={(value: string) => handleSelection("company", value)} />
                                     <EmploiButton onSelect={(value: string) => handleSelection("job", value)} />
-                                    <TechButton onSelect={(value: string) => handleSelection("tech", value)} />
                                 </>
                                 ) : (
                                     <ClubButton onSelect={(value: string) => handleSelection("club", value)} />

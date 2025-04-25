@@ -6,6 +6,8 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './JWT/jwt.strategy';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { MailService } from 'src/mail/mail.service';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
   imports: [
@@ -28,6 +30,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
       secret: process.env.JWT_SECRET || 'default_secret', // Use environment variable for JWT secret
       signOptions: { expiresIn: '24h' }, // Token expiration time
     }),
+    MailModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

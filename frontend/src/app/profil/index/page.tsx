@@ -4,8 +4,10 @@ import { useRouter } from 'next/navigation';
 import { Loader2, Edit2, MessageCircle, Users, Calendar, MapPin, Link as LinkIcon } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
 import RightSidebar from '@/components/RightSidebar';
-import Feed from '@/components/Feed';
+import Feed from '@/components/groups/Feed';
 import { getAuthToken, removeAuthToken } from '@/utils/authUtils';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface UserProfile {
   id?: string;
@@ -74,6 +76,14 @@ export default function ProfileIndex() {
     fetchUserProfile();
   }, [router]);
 
+  // Get initials for avatar fallback
+  const getInitials = () => {
+    if (userData && userData.nom && userData.prenom) {
+      return `${userData.prenom.charAt(0)}${userData.nom.charAt(0)}`;
+    }
+    return 'U'; // Default fallback
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col justify-center items-center h-screen bg-gray-50">
@@ -84,16 +94,16 @@ export default function ProfileIndex() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50 mb-20">
+    <div className="flex min-h-screen bg-white mb-20">
   <div className="flex-1 flex flex-col mb-20">
     {/* Profile Header */}
     <div className="relative w-full">
       {/* Banner */}
-      <div className="w-full h-48 sm:h-64 md:h-80 overflow-hidden bg-gradient-to-r from-blue-400 to-purple-500">
+      <div className="w-full h-24 sm:h-64 md:h-40 overflow-hidden bg-gradient-to-r from-blue-600 to-blue-200">
         {userData?.bannerPhoto ? (
           <img 
-            src={userData.bannerPhoto} 
-            alt="Profile Banner" 
+            src= {userData?.profilePhoto}
+            alt={`${userData?.prenom} ${userData?.nom}`} 
             className="w-full h-full object-cover"
           />
         ) : null}
@@ -197,26 +207,22 @@ export default function ProfileIndex() {
     </div>
 
     {/* Content Layout */}
-    <div className="grid grid-cols-12 gap-6 max-w-7xl mx-auto px-6">
+    {/* <div className="grid grid-cols-12 gap-6 max-w-7xl mx-auto px-6"> */}
       {/* Left Sidebar (Visible on Large Screens) */}
-      <aside className="hidden lg:block lg:col-span-3">
+      {/* <aside className="hidden lg:block lg:col-span-3">
         <div className="bg-white rounded-lg shadow-md sticky top-16 p-4">
           <Sidebar />
         </div>
-      </aside>
+      </aside> */}
 
       {/* Main Content */}
-      <main className="col-span-12 lg:col-span-6">
-        {/* <Feed userId={userData?.id} activeTab={activeTab} /> */}
+      <main >
+        <Feed className="flex-1"/>
       </main>
-
-      {/* Right Sidebar */}
-      <aside className="hidden lg:block lg:col-span-3">
-        <div className="bg-white rounded-lg shadow-md sticky top-16 p-4">
-          <RightSidebar />
-        </div>
-      </aside>
-    </div>
+          {/* <main>
+            <Feed className="flex-1" />
+          </main> */}
+    {/* </div> */}
   </div>
 </div>
 

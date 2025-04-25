@@ -1,25 +1,24 @@
 # Use the Node.js base image
-FROM node:18-alpine
+FROM node:23-slim
 
-# Set the working directory inside the container
+# Installer pnpm
+RUN npm install -g pnpm
+
+# Créer dossier de travail
 WORKDIR /app
 
-# Copy package.json and lock file
+# Copier les fichiers nécessaires
 COPY package.json pnpm-lock.yaml ./
+RUN pnpm install
 
-# Install dependencies
-RUN npm install -g pnpm && pnpm install
-
-# Copy the rest of the application code
+# Copier tout le code de l’app
 COPY . .
 
-# Build the NestJS application
-RUN pnpm build
-
-# Expose the application port
-EXPOSE 3000
-
-# Set the command to run the application
-CMD ["pnpm", "start:prod"]
-
+# Générer le client Prisma
 RUN pnpm prisma generate
+
+# Exposer le port du microservice
+EXPOSE 3001
+
+# Lancer en mode développement
+CMD ["pnpm", "run", "start:dev"]

@@ -8,10 +8,10 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-6 md:p-10">
       <div className="flex w-full max-w-sm flex-col gap-6">
-          <h2 className="mt-4 text-center text-2xl font-medium bg-gradient-to-r from-stone-600 to-stone-900 bg-clip-text text-transparent">
+          <h2 className="mt-4 font-klavika font-bold italic text-center text-2xl bg-gradient-to-r from-stone-600 to-stone-900 bg-clip-text text-transparent">
           Bienvenue sur Notre communaité
           </h2>
-          <a href="#" className="flex items-center gap-2 self-center text-3xl font-medium bg-gradient-to-r from-stone-600 to-stone-900 bg-clip-text text-transparent">
+          <a href="#" className="flex items-center gap-2 self-center text-3xl font-klavika font-bold italic bg-gradient-to-r from-stone-600 to-stone-900 bg-clip-text text-transparent">
           EHEI-Connect.
         </a>
         <AuthForm />

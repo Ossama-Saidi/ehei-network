@@ -5,13 +5,14 @@
 interface HeaderProps {
   className?: string;
 }
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { getDecodedToken, DecodedToken, getAuthToken, removeAuthToken } from '@/utils/authUtils';
 import Link from 'next/link';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, Bell, Users, Home, User2, UserPlus, ThumbsUp, CircleHelp } from 'lucide-react';
 import { User } from './user';
+import SearchBar from './search/SearchBar';
+import SearchHistory from './search/SearchHistory';
 import {
   Sheet,
   SheetContent,
@@ -25,18 +26,33 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Settings, LogOut } from "lucide-react";
 import LogoutButton from './buttons/LogoutButton';
 import { useRouter } from 'next/navigation';
-// import Image from "next/image"
-// import { AspectRatio } from "@/components/ui/aspect-ratio"
 
 const Header: React.FC<HeaderProps> = ({ className }) => {
   const [user, setUser] = useState<DecodedToken | null>(null);
+  const [showSearchHistory, setShowSearchHistory] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-    useEffect(() => {
-      const tokenData = getDecodedToken();
-      setUser(tokenData);
-    }, []);
+  useEffect(() => {
+    const tokenData = getDecodedToken();
+    setUser(tokenData);
+  }, []);
   
+  // Handle clicking outside search area
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSearchHistory(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   // Get initials for avatar fallback
   const getInitials = () => {
     if (user && user.nom && user.prenom) {
@@ -44,36 +60,72 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
     }
     return 'U'; // Default fallback
   };
+
+  const handleSearchHistoryItemClick = (term: string) => {
+    setSearchTerm(term);
+    setShowSearchHistory(false);
+  };
+
   return (
     <header className={`bg-white shadow-sm shadow-gray-500/50 py-2 px-4${className}`}>
       <div className="container mx-auto flex justify-between items-center ">
         {/* Logo + Barre de recherche */}
         <div className="flex items-center space-x-4 flex-1">
           <Link href="/" className="flex items-center">
-              <img
+            <img
               src="/ELogoblue.svg"
               alt="EHEI Connect"
               className="h-12 w-auto"
             />
           </Link>
           {/* Barre de recherche - Hidden on mobile */}
-          <div className="hidden md:flex items-center space-x-4 flex-1 max-w-md mx-4">
+          <div 
+            className="hidden md:flex items-center space-x-4 flex-1 max-w-md mx-4" 
+            ref={searchRef}
+          >
             <div className="relative w-full">
-              <Input
-                type="text"
-                placeholder="Rechercher..."
-                className="pl-10"
+              <div
+                onFocus={() => {
+                  setSearchFocused(true);
+                  setShowSearchHistory(true);
+                }}
+                onBlur={() => setSearchFocused(false)}
+              >
+                <SearchBar />
+              </div>
+              <SearchHistory
+                visible={showSearchHistory && !searchFocused}
+                onItemClick={handleSearchHistoryItemClick}
               />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             </div>
           </div>
         </div>
-          {/* Icônes de notification et profil */}
-          <div className="flex items-center">
-          {/* Mobile search icon */}
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Search className="h-5 w-5" />
-          </Button>
+        {/* Icônes de notification et profil */}
+        <div className="flex items-center">
+          {/* Mobile search Sheet */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Search className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="top">
+              <SheetHeader>
+                <SheetTitle>Rechercher</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4">
+                <SearchBar />
+                <div className="mt-4">
+                  <SearchHistory 
+                    visible={true}
+                    onItemClick={handleSearchHistoryItemClick}
+                  />
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+          
+          {/* Notifications */}
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="bigicon">
@@ -124,22 +176,22 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
               </div>
             </SheetContent>
           </Sheet>
-          {/* <User /> */}
+          
           {/* User Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="ml-2">
-              <Avatar>
-                {/* <AvatarImage src="https://github.com/shadcn.png" /> */}
-                <AvatarFallback>{getInitials()}</AvatarFallback>
-              </Avatar>
+                <Avatar>
+                  {/* <AvatarImage src="https://github.com/shadcn.png" /> */}
+                  <AvatarFallback>{getInitials()}</AvatarFallback>
+                </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => router.push('/profil')}>
-                <User/>
+                <User2 className="mr-2 h-4 w-4" />
                 <span>Profil</span>
               </DropdownMenuItem>
               <DropdownMenuItem>
@@ -160,4 +212,5 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
     </header>
   );
 };
+
 export default Header;

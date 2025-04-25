@@ -21,6 +21,7 @@ import {
   } from "@/components/ui/alert-dialog";
 import { Trash2, Bookmark, Flag, Globe, GlobeLock, Lock, MoreHorizontal, X } from 'lucide-react';
 import Publication from './Publication ';
+import { getAuthToken } from '@/utils/authUtils';
 
 interface PublicationActionsProps {
   id_publication: string | number;
@@ -30,6 +31,8 @@ interface PublicationActionsProps {
   const PublicationActions: React.FC<PublicationActionsProps> = ({ id_publication, id_user, setPublications }) => {
     const [audienceDialogOpen, setAudienceDialogOpen] = useState(false);
     const [reportDialogOpen, setReportDialogOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
     const [saveDialogOpen, setSaveDialogOpen] = useState(false);
     const [selectedAudience, setSelectedAudience] = useState('public');
     const [updating, setUpdating] = useState(false);
@@ -128,12 +131,30 @@ interface PublicationActionsProps {
         }
     };
 
-    const handleReportConfirm = () => {
-      toast.warning(`Publication signalée`, {
-        description: `Nous avons bien reçu votre signalement. Notre équipe l'examinera.`,
-      });
-      setReportDialogOpen(false);
+    const handleReportConfirm = async () => {
+      try {
+        const token = getAuthToken(); // récupère ton JWT
+    
+        const res = await fetch(`http://localhost:3003/api/publications/report/${id_publication}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+    
+        if (!res.ok) throw new Error('Échec du signalement');
+    
+        toast.warning(`Publication signalée`, {
+          description: `Nous avons bien reçu votre signalement. Notre équipe l'examinera.`,
+        });
+    
+        setReportDialogOpen(false);
+      } catch (error) {
+        toast.error('Erreur lors du signalement');
+        console.error(error);
+      }
     };
+    
   
     return (
       <div className="flex items-center space-x-1">
@@ -204,9 +225,7 @@ interface PublicationActionsProps {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-    
               <DropdownMenuSeparator />
-    
               {/* Archiver la publication */}
               <AlertDialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
                 <AlertDialogTrigger asChild>
@@ -233,7 +252,6 @@ interface PublicationActionsProps {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-    
               {/* Signaler la publication */}
               <AlertDialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
                 <AlertDialogTrigger asChild>
@@ -261,7 +279,7 @@ interface PublicationActionsProps {
                 </AlertDialogContent>
               </AlertDialog> 
               {/* Supprimer la publication */}
-              <AlertDialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+              <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <AlertDialogTrigger asChild>
                   <DropdownMenuItem 
                     className="flex items-center space-x-2 text-red-500 hover:bg-red-50"

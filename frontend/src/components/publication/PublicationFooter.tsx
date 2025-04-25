@@ -1,5 +1,5 @@
 import { MessageCircle, Send } from "lucide-react";
-import Comments from "../Comments";
+import Comments from "./comments/Comments";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
 import LikeButton from "../buttons/LikeButton";
@@ -36,7 +36,7 @@ interface PublicationFooterProps {
         {showComments && (
           <>
             <Separator className="my-3" />
-            <Comments />
+            <Comments id_publication={id_publication} id_user={id_user} />
           </>
         )}
       </>

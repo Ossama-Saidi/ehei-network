@@ -11,7 +11,7 @@ import axios from 'axios';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import CreatePublication from '@/components/CreatePublication';
+import CreatePublication from '@/components/publication/CreatePublication';
 import PublicationsList from '@/components/publication/PublicationsList';
 import { Button } from '@/components/ui/button';
 import SortFilter from '@/components/publication/SortFilter';

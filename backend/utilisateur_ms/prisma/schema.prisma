@@ -20,6 +20,7 @@ model Utilisateur {
   role          Role
   status        AccountStatus @default(enabled)
   bio           String?
+  is_approved   Boolean     @default(false)
   profilePhoto  String?
   bannerPhoto   String?
   createdAt     DateTime    @default(now())

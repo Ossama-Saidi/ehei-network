@@ -57,3 +57,8 @@ export const getDecodedToken = (): DecodedToken | null => {
   }
   return null;
 };
+
+export const isAdmin = (): boolean => {
+  const decoded = getDecodedToken();
+  return decoded?.role === 'ADMINISTRATEUR';
+};

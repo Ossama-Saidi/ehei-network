@@ -77,6 +77,7 @@ export default function Sidebar() {
   
       fetchUserProfile();
     }, [router]);
+    const isAdmin = user?.role === 'ADMINISTRATEUR';
   return (
     <div className="space-y-4">
       {/* Carte de profil */}
@@ -115,25 +116,34 @@ export default function Sidebar() {
     <aside className="bg-white rounded-2xl shadow-xl p-4">
       <nav className="space-y-2">
         {/* Accueil */}
-        <Link href="/" className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded">
+        <Link href="/" className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded font-semibold">
           <Home className="h-5 w-5" />
           <span>Accueil</span>
         </Link>
-
+        {isAdmin && (
+          <Link
+            href="/admin/dashboard"
+            className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded font-semibold"
+          >
+            <FileText className="h-5 w-5" />
+            <span>Dashboard</span>
+          </Link>
+        )}
         {/* Amis */}
-        <Link href="/friends" className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded">
+        <div className="flex items-center space-x-2 p-2 bg-gray-100 text-gray-400 rounded cursor-not-allowed select-none">
           <User className="h-5 w-5" />
           <span>Amis</span>
-        </Link>
+        </div>
+
 
         {/* Groups */}
-        <Link href="/groups" className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded">
+        <Link href="/groups" className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded font-semibold">
           <Users className="h-5 w-5" />
           <span>Groups</span>
         </Link>
 
         {/* Enregistrés */}
-        <Link href="/saved" className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded">
+        <Link href="/saved" className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded font-semibold">
           <Bookmark className="h-5 w-5" />
           <span>Enregistrés</span>
         </Link>
@@ -145,10 +155,10 @@ export default function Sidebar() {
         </Link> */}
 
         {/* Paramètres */}
-        <Link href="/settings" className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded">
+        <div className="flex items-center space-x-2 p-2 bg-gray-100 text-gray-400 rounded cursor-not-allowed select-none">
           <Settings className="h-5 w-5" />
           <span>Paramètres</span>
-        </Link>
+        </div>
       </nav>
       {/* <DropdownMenu>
                 <DropdownMenuTrigger asChild>

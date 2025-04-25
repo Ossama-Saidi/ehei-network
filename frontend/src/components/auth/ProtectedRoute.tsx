@@ -15,7 +15,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
     if (!isAuthenticated()) {
       toast.error('Veuillez vous connecter pour accéder à cette page');
-      router.push('/login');
+      router.push('/home');
     }
   }, [router]);
 

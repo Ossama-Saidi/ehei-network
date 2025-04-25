@@ -11,7 +11,7 @@ export default function LogoutButton() {
   const handleLogout = () => {
     removeAuthToken();
     toast.success('Déconnexion réussie');
-    router.push('/login');
+    router.push('/home');
   };
 
   return (

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { BadgeCheck } from "lucide-react";
+import { useRouter } from 'next/navigation';
 
 interface User {
   id: number;
@@ -18,6 +19,7 @@ interface PublicationHeaderProps {
   const PublicationHeader: React.FC<PublicationHeaderProps> = ({ id_user, date_publication }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
       const fetchUser = async () => {
@@ -49,27 +51,27 @@ interface PublicationHeaderProps {
 
     return (
       <div className="flex items-center gap-3">
-        <Avatar>
+        <Avatar className="cursor-pointer" onClick={() => router.push(`/profil/${id_user}`)}>
           {/* <AvatarImage src="https://github.com/shadcn.png" /> */}
           <AvatarFallback>{getInitials()}</AvatarFallback>
         </Avatar>
-        <div>
-        {loading ? (
-          <p className="font-semibold text-sm animate-pulse">Loading...</p>
-        ) : (
-          <p className="font-semibold text-sm flex items-center gap-1">
-            {user ? (
-              <>
-                {user.nomComplet}
-                {user.role !== "ETUDIANT" && (
-                  <BadgeCheck className="w-4 h-4 text-blue-600" />
-                )}
-              </>
-            ) : (
-              `User ${id_user}`
-            )}
-          </p>
-        )}
+        <div className="cursor-pointer" onClick={() => router.push(`/profil/${id_user}`)}>
+          {loading ? (
+            <p className="font-semibold text-sm animate-pulse">Loading...</p>
+          ) : (
+            <p className="font-semibold text-sm flex items-center gap-1">
+              {user ? (
+                <>
+                  {user.nomComplet}
+                  {user.role !== "ETUDIANT" && (
+                    <BadgeCheck className="w-4 h-4 text-blue-600" />
+                  )}
+                </>
+              ) : (
+                `User ${id_user}`
+              )}
+            </p>
+          )}
         <p className="text-xs text-gray-500">
           Publiée {formatDistanceToNow(new Date(date_publication), { addSuffix: true })}
         </p>
