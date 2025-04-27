@@ -103,14 +103,6 @@ app.setGlobalPrefix('api');
       },
     },
   });
-  //Swaggar configuration
-  const config = new DocumentBuilder()
-  .setTitle('Mon API')
-  .setDescription('Description de mon API')
-  .setVersion('1.0')
-  .build();
-const document = SwaggerModule.createDocument(app, config);
-SwaggerModule.setup('swagger', app, document);
 
   // Puis démarrer l'application web
   await app.listen(port, '0.0.0.0');

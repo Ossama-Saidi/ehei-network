@@ -8,7 +8,8 @@ export class GroupAdminGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const userId = request.user?.id;
-    const groupId = parseInt(request.params.groupId);
+    //const groupIdParam = request.params.groupId || request.params.id; // Adjusted to handle both cases
+    const groupId = parseInt(request.params.groupId || request.params.id); // Adjusted to handle both cases
 
     if (!userId || !groupId) {
       throw new ForbiddenException('Invalid request');

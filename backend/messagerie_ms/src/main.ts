@@ -20,13 +20,13 @@ async function bootstrap() {
 
   app.enableCors();
 
-  const port = process.env.PORT ?? 3003;
+  const port = process.env.PORT ?? 3005;
 
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
     options: {
       host: '0.0.0.0',
-      port: 3033,
+      port: 3055,
     },
   });
 

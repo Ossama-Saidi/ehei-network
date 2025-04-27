@@ -7,13 +7,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Post {
+  id          Int      @id @default(autoincrement())
+  publicationId Int    @unique  // Reference to the actual post in publication microservice
+  groupId     Int
+  authorId    Int
+  createdAt   DateTime @default(now())
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@map("posts")
+}
+
 model Group {
   id                Int                @id @default(autoincrement()) @unique
   name              String             
   description       String?
-  photoUrl          String?
   bannerUrl         String?
   status            GroupStatus        @default(ACTIVE)
+  privacy           GroupPrivacy       @default(PUBLIC)  // Add this line
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   createdBy         Int                // Ensure this references a user
@@ -21,7 +32,8 @@ model Group {
   membershipRequests MembershipRequest[]
   blockedUsers      BlockedUser[]
   invitations       Invitation[]
-
+  posts             Post[]             // Add this line
+  
   @@map("groups")
 }
 
@@ -31,7 +43,7 @@ model Member {
   userId    Int      
   groupId   Int
   joinedAt  DateTime @default(now())
-  role      MemberRole @default(MEMBER)
+  role      Role @default(ADMIN)
   group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade) // Add onDelete behavior
 
   @@unique([userId, groupId])
@@ -81,7 +93,7 @@ enum GroupStatus {
   ARCHIVED
 }
 
-enum MemberRole {
+enum Role {
   ADMIN
   MODERATOR  // Added moderator role
   MEMBER
@@ -97,4 +109,9 @@ enum InviteStatus {
   PENDING
   ACCEPTED
   REJECTED
+}
+
+enum GroupPrivacy {
+  PUBLIC
+  PRIVATE
 }

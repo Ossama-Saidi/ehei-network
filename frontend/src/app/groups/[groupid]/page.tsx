@@ -3,8 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CalendarDays, Users, Lock, Unlock, ChevronLeft, RefreshCw } from 'lucide-react';
-import { getAuthToken } from '@/utils/authUtils';
+import { ChevronLeft, RefreshCw } from 'lucide-react';
+import { getAuthToken, getDecodedToken } from '@/utils/authUtils';
+import { getImageUrl } from '@/utils/imageUtils';
+import { GroupInfoCard } from '@/components/groups/GroupInfoCard';
+import { GroupContent } from '@/components/groups/GroupContent';
+import Sidebar from '@/components/Sidebar';
+import RightSidebar from '@/components/RightSidebar';
+
+const API_URL = 'http://localhost:3002';
+const DEFAULT_BANNER = '/uploads/banners/banner.png'; // Use the same path as your upload service
 
 interface Group {
   id: number;
@@ -13,8 +21,9 @@ interface Group {
   status: string;
   privacy: string;
   createdAt: string;
-  bannerUrl?: string;
+  bannerUrl: string | null; // Change this from optional to nullable
   memberCount: number;
+  createdBy?: number;
 }
 
 export default function GroupPage() {
@@ -26,72 +35,196 @@ export default function GroupPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [isMember, setIsMember] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const userInfo = getDecodedToken();
 
   useEffect(() => {
-    async function fetchGroupDetails() {
-      try {
-        const token = getAuthToken();
-        if (!token) {
-          router.push('/login');
-          return;
-        }
-
-        const response = await fetch(`http://localhost:3002/groups/${groupId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch group: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        setGroup(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load group details');
-      } finally {
-        setLoading(false);
-      }
-    }
-
     if (groupId) {
       fetchGroupDetails();
     }
   }, [groupId, router]);
 
+  const fetchGroupDetails = async () => {
+    try {
+      setLoading(true);
+      const token = getAuthToken();
+      const userInfo = getDecodedToken();
+      
+      if (!token || !userInfo?.sub) {
+        router.push('/login');
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/groups/${groupId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch group: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setGroup(data);
+      
+      // Check membership status with the correct userId from token
+      const membershipResponse = await fetch(`${API_URL}/groups/${groupId}/membership/${userInfo.sub}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      // Parse the response to get the actual membership status
+      if (membershipResponse.ok) {
+        const membershipData = await membershipResponse.json();
+        setIsMember(membershipData.isMember); // Use the actual boolean value from response
+      } else {
+        setIsMember(false); // If response is not ok, user is not a member
+      }
+
+      // Check if current user is admin
+      if (userInfo?.sub) {
+        const memberResponse = await fetch(
+          `${API_URL}/groups/${groupId}/members/${userInfo.sub}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+          }
+        );
+
+        if (memberResponse.ok) {
+          const memberData = await memberResponse.json();
+          setIsAdmin(memberData.role === 'ADMIN');
+        }
+      }
+
+    } catch (error) {
+      console.error('Error fetching group:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load group details');
+      setIsMember(false); // Reset membership status on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const retryFetch = () => {
     setLoading(true);
     setError(null);
-    const fetchGroupDetails = async () => {
-      try {
-        const token = getAuthToken();
-        if (!token) {
-          router.push('/login');
-          return;
-        }
-
-        const response = await fetch(`http://localhost:3002/groups/${groupId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch group: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        setGroup(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load group details');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchGroupDetails();
+  };
+
+  const handleJoinGroup = async () => {
+    try {
+      setIsLoading(true);
+      const token = getAuthToken();
+      
+      const response = await fetch(`${API_URL}/groups/${groupId}/join`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to join group');
+      }
+
+      setIsMember(true);
+      // Refresh group details to get updated member count
+      await fetchGroupDetails();
+    } catch (error) {
+      console.error('Error joining group:', error);
+      setError('Failed to join group');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLeaveGroup = async () => {
+    try {
+      setIsLoading(true);
+      const token = getAuthToken();
+      
+      const response = await fetch(`${API_URL}/groups/${groupId}/leave`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to leave group');
+      }
+
+      setIsMember(false);
+      // Refresh group details to get updated member count
+      await fetchGroupDetails();
+    } catch (error) {
+      console.error('Error leaving group:', error);
+      setError('Failed to leave group');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleShareGroup = () => {
+    // Add share logic here
+    console.log('Sharing group...');
+  };
+
+  const handleArchiveGroup = async () => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/groups/${groupId}/archive`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to archive group');
+      }
+
+      // Refresh group data
+      await fetchGroupDetails();
+    } catch (error) {
+      console.error('Error archiving group:', error);
+      // Handle error (show toast notification, etc.)
+    }
+  };
+
+  const handleActivateGroup = async () => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/groups/${groupId}/active`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to activate group');
+      }
+
+      // Refresh group data
+      await fetchGroupDetails();
+    } catch (error) {
+      console.error('Error activating group:', error);
+      // Handle error (show toast notification, etc.)
+    }
   };
 
   if (loading) {
@@ -170,178 +303,70 @@ export default function GroupPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Banner with sticky header */}
+      {/* Banner Section at the top */}
       <div className="relative">
         <div className="w-full h-64 md:h-80 overflow-hidden">
-          {group.bannerUrl ? (
-            <img 
-              src={group.bannerUrl} 
-              alt={`${group.name} banner`}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center">
-              <span className="text-white text-xl font-bold">{group.name}</span>
-            </div>
-          )}
+          <img 
+            src={group.bannerUrl ? getImageUrl(group.bannerUrl) : `${API_URL}${DEFAULT_BANNER}`}
+            alt={`${group.name} banner`}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              console.log('Image failed to load:', e.currentTarget.src);
+              e.currentTarget.src = getImageUrl(DEFAULT_BANNER);
+            }}
+          />
           <div className="absolute inset-0 bg-black bg-opacity-30"></div>
-        </div>
-        
-        {/* Group info card - overlapping the banner */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative -mt-12 sm:-mt-16">
-            <div className="bg-white rounded-lg shadow-xl p-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                <div className="mb-4 md:mb-0">
-                  <div className="flex items-center">
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{group.name}</h1>
-                    <span className={`ml-4 px-3 py-1 rounded-full text-sm font-medium ${
-                      group.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {group.status}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-gray-600 max-w-2xl">{group.description}</p>
-                </div>
-                
-                <div className="flex space-x-3">
-                  <button className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition">
-                    Join Group
-                  </button>
-                  <button className="px-4 py-2 border border-gray-300 bg-white text-gray-700 font-medium rounded-md hover:bg-gray-50 transition">
-                    Share
-                  </button>
-                </div>
-              </div>
-              
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex items-center">
-                  <div className="rounded-full bg-blue-100 p-2 mr-3">
-                    <CalendarDays className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Created</p>
-                    <p className="font-medium">{new Date(group.createdAt).toLocaleDateString()}</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <div className="rounded-full bg-green-100 p-2 mr-3">
-                    <Users className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Members</p>
-                    <p className="font-medium">{group.memberCount}</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <div className="rounded-full bg-purple-100 p-2 mr-3">
-                    {group.privacy === 'PUBLIC' ? (
-                      <Unlock className="h-5 w-5 text-purple-600" />
-                    ) : (
-                      <Lock className="h-5 w-5 text-purple-600" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Privacy</p>
-                    <p className="font-medium">{group.privacy}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Navigation Tabs */}
-        <div className="mb-6 border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            <Link 
-              href={`/groups/${group.id}`}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'overview' 
-                  ? 'border-blue-500 text-blue-600' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-              onClick={() => setActiveTab('overview')}
-            >
-              Overview
-            </Link>
-            <Link 
-              href={`/groups/${group.id}/members`}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'members' 
-                  ? 'border-blue-500 text-blue-600' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-              onClick={() => setActiveTab('members')}
-            >
-              Members
-            </Link>
-            <Link 
-              href={`/groups/${group.id}/feed`}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'feed' 
-                  ? 'border-blue-500 text-blue-600' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-              onClick={() => setActiveTab('feed')}
-            >
-              Feed
-            </Link>
-            <Link 
-              href={`/groups/${group.id}/events`}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'events' 
-                  ? 'border-blue-500 text-blue-600' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-              onClick={() => setActiveTab('events')}
-            >
-              Events
-            </Link>
-          </nav>
+      {/* Content below banner with sidebars */}
+      <div className="flex">
+        {/* Left Sidebar */}
+        <div className="hidden lg:block w-64 min-h-[calc(100vh-20rem)] p-4 border-r border-gray-200">
+          <Sidebar />
         </div>
 
-        {/* Main Content Area */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-6">Group Overview</h2>
-          
-          <div className="border-t border-gray-200 pt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h3 className="font-medium text-gray-900 mb-3">About this group</h3>
-                  <p className="text-gray-600">
-                    {group.description || "This group hasn't provided a detailed description yet."}
-                  </p>
-                  
-                  <div className="mt-6">
-                    <h4 className="font-medium text-gray-900 mb-2">Recent Activity</h4>
-                    <div className="bg-white p-4 rounded border border-gray-200">
-                      <p className="text-gray-500 italic">No recent activity to display.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="lg:col-span-1">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h3 className="font-medium text-gray-900 mb-3">Top Members</h3>
-                  <div className="space-y-4">
-                    <p className="text-gray-500 italic">Member information will appear here.</p>
-                  </div>
-                  
-                  <div className="mt-6">
-                    <h4 className="font-medium text-gray-900 mb-2">Upcoming Events</h4>
-                    <div className="bg-white p-4 rounded border border-gray-200">
-                      <p className="text-gray-500 italic">No upcoming events.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* Main Content */}
+        <div className="flex-1">
+          <div className="max-w-6xl mx-auto px-4">
+            {/* Info Card Component */}
+            {group && (
+              <GroupInfoCard
+                group={group}
+                isMember={isMember}
+                isAdmin={isAdmin}
+                isLoading={isLoading}
+                onJoin={handleJoinGroup}
+                onLeave={handleLeaveGroup}
+                onShare={handleShareGroup}
+                onArchive={handleArchiveGroup}
+                onActivate={handleActivateGroup}
+              />
+            )}
+
+            {/* Group Content Component */}
+            {group && (
+              <GroupContent
+                group={{
+                  id: group.id,
+                  name: group.name,
+                  description: group.description,
+                  privacy: group.privacy as "PUBLIC" | "PRIVATE",
+                  status: group.status,
+                  createdAt: group.createdAt,
+                  memberCount: group.memberCount,
+                  createdBy: group.createdBy ?? 0
+                }}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+              />
+            )}
           </div>
+        </div>
+
+        {/* Right Sidebar */}
+        <div className="hidden xl:block w-80 min-h-[calc(100vh-20rem)] p-4 border-l border-gray-200">
+          <RightSidebar />
         </div>
       </div>
     </div>

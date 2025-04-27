@@ -22,12 +22,17 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { getAuthToken } from '@/utils/authUtils';
+import Sidebar from '@/components/Sidebar';
+import RightSidebar from '@/components/RightSidebar';
+import { getImageUrl } from '@/utils/imageUtils';
+
+const DEFAULT_BANNER = '/uploads/banners/banner.png';
 
 interface GroupCreationData {
   
   name: string;
   description: string;
-  groupBanner?: string;
+  bannerUrl?: string;
 }
 
 export default function CreateGroupPage() {
@@ -37,7 +42,7 @@ export default function CreateGroupPage() {
   // Form State
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
-  const [groupBanner, setGroupBanner] = useState('/images/banner-default.png');
+  const [groupBanner, setGroupBanner] = useState('../../../uploads/banners/banner.png');
   
   // Image Preview States
   const [groupBannerPreview, setGroupBannerPreview] = useState<string | null>(null);
@@ -66,15 +71,50 @@ export default function CreateGroupPage() {
   
         const imageUrl = URL.createObjectURL(file);
         setGroupBannerPreview(imageUrl);
+        const backendUrl = await uploadBannerImage(file);
+        await uploadBannerImage(file);
       } catch (error) {
         console.error('Error handling group banner change:', error);
         toast.error('Failed to update group banner');
       }
     }
   };
+  // New function to handle the actual upload
+  const uploadBannerImage = async (file: File) => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('http://localhost:3002/groups/upload-banner', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload banner image');
+      }
+      
+      const result = await response.json();
+      // Use the complete URL returned from the server
+      setGroupBanner(result.bannerUrl);
+      return result.bannerUrl;
+    } catch (error) {
+      console.error('Error uploading banner:', error);
+      toast.error('Failed to upload banner image');
+    }
+  };
   const confirmGroupBannerChange = () => {
     if (groupBannerPreview) {
-      setGroupBanner(groupBannerPreview);
+      
       setGroupBannerPreview(null);
       setGroupBannerDialogOpen(false);
       toast.success('Group banner updated successfully!');
@@ -105,7 +145,7 @@ export default function CreateGroupPage() {
       const groupData: GroupCreationData = {
         name: groupName,
         description: groupDescription || 'No description provided',
-        groupBanner,
+        bannerUrl: groupBanner,
       };
       
       const response = await fetch('http://localhost:3002/groups', {
@@ -134,76 +174,92 @@ export default function CreateGroupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6">
-      <form className="max-w-4xl mx-auto space-y-8" onSubmit={handleSubmit}>
-        {/* Banner Section */}
-        <div className="relative w-full h-56 sm:h-64 md:h-72 lg:h-80 rounded-xl overflow-hidden shadow-md">
-          <img 
-            src={groupBanner} 
-            alt="Group Banner" 
-            className="w-full h-full object-cover transition-all" 
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+    <div className="min-h-screen bg-gray-50">
+      {/* Banner Section */}
+      <div className="relative w-full h-56 sm:h-64 md:h-72 lg:h-80 overflow-hidden shadow-md">
+      <img 
+        src={groupBannerPreview || (groupBanner ? getImageUrl(groupBanner) : getImageUrl(DEFAULT_BANNER))}
+        alt="Group Banner"
+        className="w-full h-full object-cover"
+      />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
-          <button
-            type="button"
-            onClick={() => setGroupBannerDialogOpen(true)}
-            className="absolute top-4 right-4 p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all"
-            aria-label="Edit banner"
-          >
-            <Camera className="w-5 h-5 text-gray-700" />
-          </button>
+        <button
+          type="button"
+          onClick={() => setGroupBannerDialogOpen(true)}
+          className="absolute top-4 right-4 p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all"
+          aria-label="Edit banner"
+        >
+          <Camera className="w-5 h-5 text-gray-700" />
+        </button>
+      </div>
+
+      {/* Content with Sidebars */}
+      <div className="flex">
+        {/* Left Sidebar */}
+        <div className="hidden lg:block w-64 min-h-[calc(100vh-20rem)] p-4 border-r border-gray-200">
+          <Sidebar />
         </div>
 
-        <div className="mt-14 relative">
-          <Card className="border-0 shadow-md">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-gray-800">Create New Group</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-6">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="groupName" className="text-right">
-                  Group Name
-                </Label>
-                <Input
-                  name="groupName"
-                  value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
-                  placeholder="Enter group name"
-                  className="col-span-3"
-                  required
-                />
-              </div>
+        {/* Main Content */}
+        <div className="flex-1 py-8 px-4 sm:px-6">
+          <form className="max-w-4xl mx-auto space-y-8" onSubmit={handleSubmit}>
+            <div className="mt-4 relative">
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-2xl font-bold text-gray-800">Create New Group</CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-6">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="groupName" className="text-right">
+                      Group Name
+                    </Label>
+                    <Input
+                      name="groupName"
+                      value={groupName}
+                      onChange={(e) => setGroupName(e.target.value)}
+                      placeholder="Enter group name"
+                      className="col-span-3"
+                      required
+                    />
+                  </div>
 
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="groupDescription" className="text-right">
-                  Description
-                </Label>
-                <Textarea
-                  id="groupDescription"
-                  value={groupDescription}
-                  onChange={(e) => setGroupDescription(e.target.value)}
-                  placeholder="Tell us about your group..."
-                  rows={5}
-                  className="col-span-3 resize-none"
-                />
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="grid grid-cols-4 items-start gap-4">
+                    <Label htmlFor="groupDescription" className="text-right">
+                      Description
+                    </Label>
+                    <Textarea
+                      id="groupDescription"
+                      value={groupDescription}
+                      onChange={(e) => setGroupDescription(e.target.value)}
+                      placeholder="Tell us about your group..."
+                      rows={5}
+                      className="col-span-3 resize-none"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
-          <div className="mt-8 mb-20 pb-10 flex justify-center">
-            <Button 
-              type="submit" 
-              size="lg" 
-              className="px-8 py-6 text-lg rounded-xl shadow-md flex items-center gap-2"
-              disabled={isLoading}
-            >
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
-              {isLoading ? 'Creating Group...' : 'Create Group'}
-            </Button>
-          </div>
+              <div className="mt-8 mb-20 pb-10 flex justify-center">
+                <Button 
+                  type="submit" 
+                  size="lg" 
+                  className="px-8 py-6 text-lg rounded-xl shadow-md flex items-center gap-2"
+                  disabled={isLoading}
+                >
+                  {isLoading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
+                  {isLoading ? 'Creating Group...' : 'Create Group'}
+                </Button>
+              </div>
+            </div>
+          </form>
         </div>
-      </form>
+
+        {/* Right Sidebar */}
+        <div className="hidden xl:block w-80 min-h-[calc(100vh-20rem)] p-4 border-l border-gray-200">
+          <RightSidebar />
+        </div>
+      </div>
 
       <Dialog open={groupBannerDialogOpen} onOpenChange={setGroupBannerDialogOpen}>
         <DialogContent className="sm:max-w-lg">
@@ -217,7 +273,7 @@ export default function CreateGroupPage() {
           <div className="grid w-full items-center gap-4 py-4">
             <div className="relative w-full h-48 rounded-lg overflow-hidden mb-2 bg-gray-100 border">
               <img 
-                src={groupBannerPreview || groupBanner} 
+                src={groupBannerPreview || DEFAULT_BANNER} 
                 alt="Group Banner Preview" 
                 className="w-full h-full object-cover" 
               />
