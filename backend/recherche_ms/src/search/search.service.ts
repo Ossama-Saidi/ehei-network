@@ -1,51 +1,38 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, FindOperator, FindOptionsOrder } from 'typeorm';
-import { Search } from './entities/search.entity';
-import { User } from './entities/user.entity';
-import { Groupe } from './entities/groupe.entity';
-import { Tag } from './entities/tag.entity';
-import { Publication } from './entities/publication.entity';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { TagService } from './tag.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { UserCacheService } from 'src/users/user-cache.service';
 
 @Injectable()
 export class SearchService {
   constructor(
-    @InjectRepository(Search) private searchRepo: Repository<Search>,
-    @InjectRepository(User) private userRepo: Repository<User>,
-    @InjectRepository(Groupe) private groupeRepo: Repository<Groupe>,
-    @InjectRepository(Tag) private tagRepo: Repository<Tag>,
-    @InjectRepository(Publication) private publicationRepo: Repository<Publication>,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private tagService: TagService,
+    private prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache, // Gardez cette ligne car vous l'utilisez ailleurs
+    private userCacheService: UserCacheService,
   ) {}
+  
+async rechercher(terme: string, utilisateurId: number) {
+  const cacheKey = `search_${terme}`;
+  const cached = await this.cacheManager.get<any>(cacheKey);
+  if (cached) return cached;
 
-  async rechercher(terme: string, utilisateurId: number) {
-    const cacheKey = `search_${terme}`;
-    const cached = await this.cacheManager.get<any>(cacheKey);
-    if (cached) return cached;
+  const { isHashtag, cleanTerm, hashtags } = this.analyzeSearchTerm(terme);
+  
+  const [utilisateurs, groupes, tags] = await Promise.all([
+    this.searchUsers(cleanTerm),
+    this.searchGroups(cleanTerm),
+    this.searchTags(hashtags.length > 0 ? hashtags[0] : cleanTerm),
+  ]);
 
-    const { isHashtag, cleanTerm, hashtags } = this.analyzeSearchTerm(terme);
-    
-    const [utilisateurs, groupes, publications, tags] = await Promise.all([
-      this.searchUsers(cleanTerm),
-      this.searchGroups(cleanTerm),
-      this.searchPublications(terme, hashtags),
-      this.searchTags(hashtags.length > 0 ? hashtags[0] : cleanTerm)
-    ]);
+  const result = { utilisateurs, groupes, tags };
+  await this.cacheResults(cacheKey, result);
+  await this.saveSearchHistory(utilisateurId, terme, result);
 
-    await this.updateTagPopularity(tags);
-    
-    const result = { utilisateurs, groupes, publications, tags };
-    await this.cacheResults(cacheKey, result);
-    await this.saveSearchHistory(utilisateurId, terme, result);
+  return result;
+}
 
-    return result;
-  }
-
-  private analyzeSearchTerm(term: string) {
+  analyzeSearchTerm(term: string) {
     const isHashtag = term.startsWith('#');
     const cleanTerm = isHashtag ? term.slice(1) : term;
     const hashtags = this.extractHashtags(term);
@@ -53,11 +40,11 @@ export class SearchService {
     return { 
       isHashtag, 
       cleanTerm, 
-      hashtags: [...new Set(hashtags)] // Élimine les doublons
+      hashtags: [...new Set(hashtags)], // Élimine les doublons
     };
   }
 
-  private extractHashtags(text: string): string[] {
+  extractHashtags(text: string): string[] {
     const hashtagRegex = /#(\w+)/g;
     const matches: string[] = [];
     let match;
@@ -69,137 +56,128 @@ export class SearchService {
     return matches;
   }
 
-  private async searchUsers(term: string) {
-    if (!term || term.length < 1) return [];
-    return this.userRepo.find({ 
-      where: { nom: Like(`%${term}%`) },
-      take: 5
-    });
-  }
-
-  private async searchGroups(term: string) {
-    if (!term || term.length < 1) return [];
-    return this.groupeRepo.find({ 
-      where: { nom: Like(`%${term}%`) },
-      take: 5
-    });
-  }
-
-  private async searchPublications(term: string, hashtags: string[]) {
-    const whereConditions: Array<{ contenu: FindOperator<string> }> = [];
-    
-    // Recherche dans le texte
-    if (term) {
-      whereConditions.push({ contenu: Like(`%${term}%`) });
-      
-      // Recherche des hashtags similaires
-      const similarTags = await this.tagService.searchTags(term);
-      similarTags.forEach(tag => {
-        whereConditions.push({ contenu: Like(`%#${tag.nom}%`) });
-      });
-    }
-
-    // Recherche des hashtags explicites
-    hashtags.forEach(tag => {
-      whereConditions.push({ contenu: Like(`%#${tag}%`) });
-    });
-
-    const order: FindOptionsOrder<Publication> = { 
-      date_creation: 'DESC' 
-    };
-
-    return whereConditions.length > 0 
-      ? this.publicationRepo.find({ 
-          where: whereConditions, 
-          take: 5,
-          order
-        })
-      : [];
-  }
-  async searchTags(term: string): Promise<Tag[]> {
-    if (!term?.trim() || term.trim().length < 2) return []; // Vérifie aussi les espaces
+  async searchUsers(term: string) {
+    // Rechercher même avec un seul caractère
+  if (!term) return [];
   
+  const lowerTerm = term.toLowerCase().trim();
+  console.log('Searching for term:', lowerTerm);
+
+  // Utiliser directement UserCacheService
+  const allUsers = this.userCacheService.getAllUsers();
+  console.log(`Found ${allUsers.length} users in cache`);
+  
+  const matchedUsers = allUsers.filter(user => {
+    const nom = (user.nom || '').toLowerCase();
+    const prenom = (user.prenom || '').toLowerCase();
+    const nomComplet = (user.nomComplet || '').toLowerCase();
+    
+    // Cherche si le terme est présent au début d'un nom ou prénom
+    return nom.startsWith(lowerTerm) || 
+           prenom.startsWith(lowerTerm) || 
+           nomComplet.startsWith(lowerTerm) ||
+           nom.includes(lowerTerm) ||
+           prenom.includes(lowerTerm) ||
+           nomComplet.includes(lowerTerm);
+  });
+
+  console.log(`Found ${matchedUsers.length} matched users`);
+
+  return matchedUsers.map(user => ({
+    id: user.id,
+    nom: user.nom,
+    prenom: user.prenom,
+    nomComplet: user.nomComplet,
+    type: 'user'
+  })).slice(0, 5);
+}
+  
+
+  async searchGroups(term: string) {
+    if (!term || term.length < 1) return [];
+    
+    const groupes = await this.cacheManager.get<any[]>('groupes_cache');
+    if (!groupes) return [];
+    
+    return groupes.filter(groupe => groupe.nom?.toLowerCase().includes(term.toLowerCase())).slice(0, 5);
+  }
+
+  async searchTags(term: string): Promise<any[]> {
+    if (!term?.trim() || term.trim().length < 2) return [];
+
     try {
       const cacheKey = `tags_${term}`;
-      const cached = await this.cacheManager.get<Tag[]>(cacheKey);
+      const cached = await this.cacheManager.get<any[]>(cacheKey);
       if (cached) return cached;
-  
-      // Requête corrigée pour simple-array :
-      const results = await this.tagRepo
-        .createQueryBuilder('tag')
-        .where('tag.nom LIKE :term', { term: `%${term}%` }) // Recherche dans le nom
-        .orWhere('tag.variations LIKE :variationTerm', { 
-          variationTerm: `%,${term},%` // Recherche EXACTE dans les variations
-        })
-        .orderBy('tag.occurrences', 'DESC')
-        .limit(10)
-        .getMany();
-  
-      await this.cacheManager.set(cacheKey, results, 30000); // Cache 30s
+
+      const allTags = await this.cacheManager.get<any[]>('tags_cache');
+      if (!allTags) return [];
+
+      const results = allTags.filter(tag =>
+        tag.nom?.toLowerCase().includes(term.toLowerCase()) ||
+        (tag.variations && tag.variations.includes(term))
+      ).sort((a, b) => (b.occurrences || 0) - (a.occurrences || 0)).slice(0, 10);
+
+      await this.cacheManager.set(cacheKey, results, 30);
       return results;
     } catch (error) {
-      console.error('Erreur dans searchTags() :', {
-        term,
-        error: error.message,
-        stack: error.stack
-      });
+      console.error('Erreur dans searchTags() :', error);
       throw new Error('Échec de la recherche de tags');
     }
   }
-  private async updateTagPopularity(tags: Tag[]) {
-    if (tags.length > 0) {
-      await Promise.all(
-        tags.map(tag => 
-          this.tagService.updateTagUsage(tag.id)
-        )
-      );
-    }
-  }
 
-  private async cacheResults(key: string, data: any) {
+  async cacheResults(key: string, data: any) {
     await this.cacheManager.set(key, data, data.tags?.length ? 3600000 : 600000);
   }
 
-  private async saveSearchHistory(
+  async saveSearchHistory(
     userId: number,
     term: string,
     results: { [key: string]: any[] }
   ) {
     const hasResults = Object.values(results).some((arr: any[]) => arr.length > 0);
-    
-    await this.searchRepo.save({
-      utilisateur: { id: userId },
-      terme: term,
-      statut: hasResults ? 'trouvé' : 'non trouvé',
-      date_recherche: new Date()
+
+    await this.prisma.search.create({
+      data: {
+        utilisateurId: userId,
+        terme: term,
+        statut: hasResults ? 'trouvé' : 'non_trouvé',
+        dateRecherche: new Date()
+      }
     });
   }
 
-  // Méthodes existantes inchangées
-  async suggestTags(query: string): Promise<Tag[]> {
-    return this.searchTags(query);
-  }
-
   async getDernieresRecherches(utilisateurId: number) {
-    return this.searchRepo.find({
-      where: { utilisateur: { id: utilisateurId } },
-      order: { date_recherche: 'DESC' },
+    return this.prisma.search.findMany({
+      where: { utilisateurId },
+      orderBy: { dateRecherche: 'desc' },
       take: 5,
+      select: {
+        id: true,
+        terme: true,
+        resultatId: true,
+        type: true,
+        dateRecherche: true,
+      }
     });
   }
 
   async getHistoriqueComplet(utilisateurId: number) {
-    return this.searchRepo.find({
-      where: { utilisateur: { id: utilisateurId } },
-      order: { date_recherche: 'DESC' },
+    return this.prisma.search.findMany({
+      where: { utilisateurId },
+      orderBy: { dateRecherche: 'desc' },
     });
   }
 
   async clearHistorique(utilisateurId: number) {
-    return this.searchRepo.delete({ utilisateur: { id: utilisateurId } });
+    return this.prisma.search.deleteMany({
+      where: { utilisateurId },
+    });
   }
 
   async deleteSearchItem(utilisateurId: number, id: number) {
-    return this.searchRepo.delete({ id, utilisateur: { id: utilisateurId } });
+    return this.prisma.search.deleteMany({
+      where: { id, utilisateurId },
+    });
   }
 }

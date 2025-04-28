@@ -147,7 +147,7 @@ export default function UserProfilePage() {
 
         <main>
           {/* <Feed className="flex-1" profilId={profilid} /> */}
-          <Feed className="flex-1" />
+          <Feed className="flex-1" profilid={profilid} />
         </main>
       </div>
     </div>

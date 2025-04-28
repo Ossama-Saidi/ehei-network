@@ -8,7 +8,7 @@ import { getDecodedToken, authHeader } from '@/utils/authUtils';
 import io from 'socket.io-client';
 import EmojiPicker from 'emoji-picker-react';
 
-const socket = io('http://localhost:3003', {
+const socket = io('http://localhost:3005', {
   transports: ['websocket'],
 });
 
@@ -42,7 +42,7 @@ const ChatView = () => {
   const fetchMessages = useCallback(async () => {
     if (!senderId || !receiverId) return;
     try {
-      const res = await axios.get(`http://localhost:3003/messages/conversation/${senderId}/${receiverId}`, { headers: token });
+      const res = await axios.get(`http://localhost:3005/messages/conversation/${senderId}/${receiverId}`, { headers: token });
       setMessages(res.data.status === 'OK' ? res.data.data.map((msg: any) => ({ ...msg, hidden: false })) : []);
     } catch (error) {
       console.error('Erreur lors du chargement des messages:', error);
@@ -113,7 +113,7 @@ const ChatView = () => {
     const newMessage = { id: Date.now(), senderId, content: message, hidden: false };
 
     try {
-      await axios.post('http://localhost:3003/messages/send', {
+      await axios.post('http://localhost:3005/messages/send', {
         senderId,
         receiverId,
         content: message,
@@ -131,7 +131,7 @@ const ChatView = () => {
   const handleEditMessage = async () => {
     if (!editingMessageId || editContent.trim() === '') return;
     try {
-      await axios.put(`http://localhost:3003/messages/update/${editingMessageId}/${senderId}`, { content: editContent }, { headers: token });
+      await axios.put(`http://localhost:3005/messages/update/${editingMessageId}/${senderId}`, { content: editContent }, { headers: token });
       setMessages(prev => prev.map(msg => msg.id === editingMessageId ? { ...msg, content: editContent } : msg));
       setEditingMessageId(null);
       setEditContent('');
@@ -142,7 +142,7 @@ const ChatView = () => {
 
   const handleArchiveMessage = async (messageId: number) => {
     try {
-      await axios.patch(`http://localhost:3003/messages/archive/${messageId}`, null, { headers: token });
+      await axios.patch(`http://localhost:3005/messages/archive/${messageId}`, null, { headers: token });
       setMessages(prev => prev.filter(msg => msg.id !== messageId));
     } catch (error) {
       console.error("Erreur lors de l'archivage du message :", error);
@@ -151,7 +151,7 @@ const ChatView = () => {
 
   const handleHideMessage = async (messageId: number) => {
     try {
-      await axios.patch(`http://localhost:3003/messages/hide/${messageId}`, null, { headers: token });
+      await axios.patch(`http://localhost:3005/messages/hide/${messageId}`, null, { headers: token });
       setMessages(prev => prev.map(msg => msg.id === messageId ? { ...msg, hidden: true } : msg));
     } catch (error) {
       console.error("Erreur lors du masquage du message :", error);

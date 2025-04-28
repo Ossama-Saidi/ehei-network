@@ -13,7 +13,7 @@ interface SearchResult {
   id: number;
   nom: string;
   displayName?: string;
-  type?: string;
+  type?: 'utilisateur' | 'groupe' | 'tag' | 'publication';
   titre?: string;
   prenom?: string;
   contenu?: string;
@@ -47,7 +47,8 @@ const SearchBar: React.FC = () => {
   // Fetch suggestions as the user types
   useEffect(() => {
     const fetchSuggestions = async () => {
-      if (query.length < 2) {
+      // Commencer à chercher dès le premier caractère
+      if (!query) {
         setSuggestions([]);
         return;
       }
@@ -70,11 +71,12 @@ const SearchBar: React.FC = () => {
       }
     };
 
+    // Réduire le délai pour une expérience plus réactive
     const timeoutId = setTimeout(() => {
-      if (query.length >= 2) {
+      if (query) {
         fetchSuggestions();
       }
-    }, 300);
+    }, 200);  // Réduit de 300ms à 200ms
 
     return () => clearTimeout(timeoutId);
   }, [query, userId, isFocused]);
@@ -134,21 +136,33 @@ const SearchBar: React.FC = () => {
   };
 
   const handleSuggestionClick = (suggestion: SearchResult) => {
-    const searchTerm = suggestion.displayName || suggestion.nom || suggestion.titre || '';
-    setQuery(searchTerm);
-    performSearch(searchTerm);
+    setShowDropdown(false);
+    setIsFocused(false); // <- empêcher de réouvrir
+    
+    // if (suggestion.type === 'utilisateur') {
+      router.push(`/profil/${suggestion.id}`);
+    // } else if (suggestion.type === 'groupe') {
+    //   router.push(`/groupe/${suggestion.id}`);
+    // } else if (suggestion.type === 'tag') {
+    //   router.push(`/tags/${suggestion.id}`);
+    // } else {
+    //   // fallback général si besoin
+    //   console.log('Suggestion click fallback', suggestion);
+    // }
     setShowDropdown(false);
   };
+  
 
   const renderResultItem = (result: SearchResult) => {
-    if (result.type === 'user') {
+    if (result.type === 'utilisateur') {
+      const initials = `${result.prenom?.[0] || ''}${result.nom?.[0] || ''}`;
       return (
         <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
             {result.imageUrl ? (
-              <img src={result.imageUrl} alt={`${result.prenom} ${result.nom}`} className="w-full h-full rounded-full object-cover" />
+              <img src={result.imageUrl} alt={initials} className="w-full h-full rounded-full object-cover" />
             ) : (
-              <span className="text-sm font-semibold">{result.prenom?.[0]}{result.nom?.[0]}</span>
+              <span className="text-sm font-semibold text-blue-600">{initials}</span>
             )}
           </div>
           <div>
@@ -157,24 +171,17 @@ const SearchBar: React.FC = () => {
           </div>
         </div>
       );
-    } else if (result.type === 'post') {
-      return (
-        <div>
-          <p className="font-medium">{result.titre}</p>
-          <p className="text-xs text-gray-500 line-clamp-1">{result.contenu}</p>
-          <p className="text-xs text-gray-500">Publication</p>
-        </div>
-      );
     } else if (result.type === 'tag') {
       return (
         <div className="flex items-center">
-          <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-0.5 rounded">
-            #{result.nom}
-          </span>
+          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+            <span className="text-blue-600 font-bold">#</span>
+          </div>
+          <span className="font-medium">{result.displayName || result.nom}</span>
         </div>
       );
     } else {
-      // Default display for suggestions
+      // Default display for other types of suggestions
       return (
         <div className="flex items-center">
           <Search className="h-4 w-4 mr-2 text-gray-400" />

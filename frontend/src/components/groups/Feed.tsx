@@ -4,6 +4,7 @@
 import React from 'react';
 interface FeedProps {
   className?: string;
+  profilid: any;
 }
 import { useState, useEffect } from "react";
 import io from 'socket.io-client';
@@ -17,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import SortFilter from '@/components/publication/SortFilter';
 import { Publication } from '@/components/publication/publication.interface';
 import { getAuthToken } from '@/utils/authUtils';
-const Feed: React.FC<FeedProps> = ({ className }) => {
+const Feed: React.FC<FeedProps> = ({ className, profilid }) => {
 
   const router = useRouter();  // Initialize router
   const searchParams = useSearchParams();
@@ -55,7 +56,7 @@ const Feed: React.FC<FeedProps> = ({ className }) => {
       setLoading(true);
       const endpoint = tag 
         ? `${process.env.NEXT_PUBLIC_API_URL}/publications/searchtags?tag=${encodeURIComponent(tag)}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/publications`;
+        : `${process.env.NEXT_PUBLIC_API_URL}/publications/user/${profilid}`;
 
       try {
         const response = await fetch(endpoint, {

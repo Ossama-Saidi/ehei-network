@@ -9,9 +9,11 @@ import { Search, X, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 
-interface SearchHistoryItem {
+export interface SearchHistoryItem {
   id: number;
   terme: string;
+  resultatId: number;
+  type: 'utilisateur' | 'groupe' | 'tag' | 'publication';
   date: string;
 }
 
@@ -20,7 +22,8 @@ interface SearchHistoryProps {
   onItemClick: (term: string) => void;
 }
 
-const SearchHistory: React.FC<SearchHistoryProps> = ({ visible, onItemClick }) => {
+
+const SearchHistory: React.FC<SearchHistoryProps> = ({ visible, onItemClick }) => { 
   const [history, setHistory] = useState<SearchHistoryItem[]>([]);
   const router = useRouter();
   const userId = getDecodedToken()?.sub;
@@ -58,6 +61,15 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({ visible, onItemClick }) =
       console.error('Error clearing history:', error);
     }
   };
+
+  const handleNavigate = (item: SearchHistoryItem) => {
+    // if (item.type === 'utilisateur') {
+      router.push(`/profil/${item.id}`);
+    // } else if (item.type === 'groupe') {
+    //   router.push(`/groupe/${item.resultatId}`);
+    // }
+    // Plus besoin d'utiliser onItemNavigate ici
+  };  
 
   const handleDeleteItem = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -109,7 +121,7 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({ visible, onItemClick }) =
                 <li 
                   key={item.id} 
                   className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 rounded-md cursor-pointer"
-                  onClick={() => onItemClick(item.terme)}
+                  onClick={() => handleNavigate(item)}
                 >
                   <div className="flex items-center">
                     <Search className="h-4 w-4 mr-2 text-gray-400" />

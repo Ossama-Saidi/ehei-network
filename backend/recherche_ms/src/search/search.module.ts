@@ -9,13 +9,18 @@ import { SearchService } from './search.service';
 import { SearchController } from './search.controller';
 import { CacheModule } from '@nestjs/cache-manager';
 import { TagService } from './tag.service';
+import { PrismaModule } from 'src/prisma/prisma.module';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Search, User, Groupe, Tag, Publication]),
     CacheModule.register(),
+    PrismaModule,
+    UsersModule
   ],
-  providers: [SearchService, TagService],
+  providers: [SearchService, TagService, PrismaService],
   controllers: [SearchController],
 })
 export class SearchModule {}
