@@ -206,7 +206,7 @@ const ChatView = () => {
         <div className="h-64 overflow-y-auto p-4 flex flex-col" ref={messageContainerRef}>
           {selectedUser ? (
             filteredMessages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.senderId === senderId ? 'justify-end' : 'justify-start'}`}>
+              <div key={msg.id} className={`flex ${msg.senderId === senderId ? 'justify-end' : 'justify-start'} mb-2`}>
                 <div className={`p-2 rounded-lg text-sm ${msg.senderId === senderId ? 'bg-blue-200' : 'bg-gray-200'} max-w-[75%]`}>
                   {editingMessageId === msg.id ? (
                     <div className="flex flex-col gap-1">

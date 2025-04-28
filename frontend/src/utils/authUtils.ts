@@ -28,13 +28,12 @@ export const removeAuthToken = () => {
 export const authHeader = () => {
   const token = getAuthToken();
   if (token) {
-    return { 'Authorization': `Bearer ${token}`};
+    return { 'Authorization': `Bearer ${token}` };
   }
   return {};
 };
 
 export interface DecodedToken {
-  id: string;
   sub: number;
   email: string;
   role: string;
@@ -45,6 +44,11 @@ export interface DecodedToken {
   badge?: string;
   telephone?: string;
 }
+
+export const getUserId = (): number | null => {
+  const decodedToken = getDecodedToken();
+  return decodedToken?.sub || null;
+};
 
 export const getDecodedToken = (): DecodedToken | null => {
   const token = getAuthToken();
@@ -57,9 +61,4 @@ export const getDecodedToken = (): DecodedToken | null => {
     }
   }
   return null;
-};
-
-export const isAdmin = (): boolean => {
-  const decoded = getDecodedToken();
-  return decoded?.role === 'ADMINISTRATEUR';
 };

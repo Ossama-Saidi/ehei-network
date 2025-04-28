@@ -1,10 +1,21 @@
-import {GroupStatus} from '../enums/group-status.enum';
+import { IsNotEmpty, IsString, IsOptional, IsEnum } from 'class-validator';
 
 export class CreateGroupDto {
-    name: string;
-    description?: string;
-    createdBy: number; 
-    status: GroupStatus.ACTIVE;
-    photoUrl?: string; // URL of the group's photo
-    bannerUrl?: string; // URL of the group's banner
-  }
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsEnum(['PUBLIC', 'PRIVATE'])
+  privacy?: 'PUBLIC' | 'PRIVATE' = 'PUBLIC';
+
+  @IsOptional()
+  @IsString()
+  bannerUrl?: string;
+
+  createdBy?: number;
+}

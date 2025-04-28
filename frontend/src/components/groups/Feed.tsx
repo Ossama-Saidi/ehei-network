@@ -1,7 +1,7 @@
 // Fil d'actualités central
 // src/components/Feed.tsx
 'use client';
-import React from 'react';
+import React, { JSX } from 'react';
 interface FeedProps {
   className?: string;
   profilid: any;
@@ -12,7 +12,7 @@ import axios from 'axios';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import CreatePublication from '@/components/publication/CreatePublication';
+import CreatePublication from '../publication/CreatePublication';
 import PublicationsList from '@/components/publication/PublicationsList';
 import { Button } from '@/components/ui/button';
 import SortFilter from '@/components/publication/SortFilter';
@@ -78,7 +78,7 @@ const Feed: React.FC<FeedProps> = ({ className, profilid }) => {
       }
     };
     fetchPublications();
-  }, [tag]); // Dependency array updated to include `tag`
+  }, [tag]); // Dependency array updated to include tag
 
   const [uploading, setUploading] = useState(false);
   const uploadImage = async () => {

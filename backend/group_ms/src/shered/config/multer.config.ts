@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export const multerOptions = {
   storage: diskStorage({
-    destination: './public/uploads/banners',
+    destination: 'backend/src/uploads/banners',
     filename: (req, file, cb) => {
       const randomName = uuidv4();
       return cb(null, `${randomName}${extname(file.originalname)}`);

@@ -8,6 +8,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
+import { getAuthToken, DecodedToken } from '@/utils/authUtils';
 
 interface Member {
   id: number;
@@ -29,7 +30,7 @@ interface MembersTabProps {
   groupId: number;
   isAdmin: boolean;
   isModerator: boolean;
-  currentUserId: number;
+  currentUserId: number | null;
 }
 
 export const MembersTab: React.FC<MembersTabProps> = ({ 
@@ -41,16 +42,19 @@ export const MembersTab: React.FC<MembersTabProps> = ({
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchMembers();
+    if (groupId) {
+      fetchMembers();
+    }
   }, [groupId]);
 
   const fetchMembers = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:3000/groups/${groupId}/members`, {
+      const token = getAuthToken();
+      const response = await fetch(`http://localhost:3002/groups/${groupId}/members`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -64,6 +68,7 @@ export const MembersTab: React.FC<MembersTabProps> = ({
       setMembers(data);
     } catch (error) {
       console.error('Error fetching members:', error);
+      setError('Failed to fetch members');
     } finally {
       setIsLoading(false);
     }
@@ -73,8 +78,8 @@ export const MembersTab: React.FC<MembersTabProps> = ({
     if (!confirm('Are you sure you want to remove this member?')) return;
     
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:3000/groups/${groupId}/members/${userId}`, {
+      const token = getAuthToken();
+      const response = await fetch(`http://localhost:3002/groups/${groupId}/members/${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -94,8 +99,8 @@ export const MembersTab: React.FC<MembersTabProps> = ({
 
   const handlePromoteToModerator = async (memberId: number) => {
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:3000/groups/${groupId}/members`, {
+      const token = getAuthToken();
+      const response = await fetch(`http://localhost:3002/groups/${groupId}/members`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -120,8 +125,8 @@ export const MembersTab: React.FC<MembersTabProps> = ({
 
   const handleDemoteToMember = async (memberId: number) => {
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:3000/groups/${groupId}/members`, {
+      const token = getAuthToken();
+      const response = await fetch(`http://localhost:3002/groups/${groupId}/members`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -145,16 +150,16 @@ export const MembersTab: React.FC<MembersTabProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg">
-      <div className="flex justify-between items-center mb-4 p-4">
-        <h3 className="font-medium">Group Members</h3>
-        {(isAdmin || isModerator) && (
+    <div className="bg-white rounded-lg shadow-md">
+      <div className="flex justify-between items-center p-4 border-b">
+        <h3 className="font-semibold text-lg">Members ({members.length})</h3>
+        {isAdmin && (
           <button
             onClick={() => setIsInviteModalOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm flex items-center"
+            className="flex items-center px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             <UserPlus className="h-4 w-4 mr-1" />
-            Invite User
+            Invite
           </button>
         )}
       </div>
@@ -164,57 +169,59 @@ export const MembersTab: React.FC<MembersTabProps> = ({
           <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
         </div>
       ) : members.length > 0 ? (
-        <div className="divide-y">
+        <div className="divide-y max-h-[500px] overflow-y-auto">
           {members.map((member) => (
-            <div key={member.id} className="flex items-center justify-between p-4">
+            <div key={member.id} className="flex items-center justify-between p-4 hover:bg-gray-50">
               <div className="flex items-center">
-                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
                   {member.user?.avatar ? (
                     <img
                       src={member.user.avatar}
-                      alt={member.user?.username || `User ${member.userId}`}
-                      className="h-full w-full object-cover"
+                      alt={member.user?.name || `User ${member.userId}`}
+                      className="h-full w-full object-cover rounded-full"
                     />
                   ) : (
-                    <span className="text-gray-600 text-sm">
-                      {(member.user?.name || member.user?.username || `User ${member.userId}`).charAt(0).toUpperCase()}
+                    <span className="text-gray-600">
+                      {(member.user?.name || `U`).charAt(0).toUpperCase()}
                     </span>
                   )}
                 </div>
                 <div className="ml-3">
-                  <p className="font-medium">
-                    {member.user?.name || member.user?.username || `User ${member.userId}`}
+                  <p className="font-medium text-sm">
+                    {member.user?.name || `User ${member.userId}`}
                   </p>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <span className="capitalize">{member.role.toLowerCase()}</span>
-                    <span className="mx-1">•</span>
-                    <span>Joined {new Date(member.createdAt).toLocaleDateString()}</span>
-                  </div>
+                  <p className="text-xs text-gray-500 capitalize">
+                    {member.role.toLowerCase()}
+                  </p>
                 </div>
               </div>
 
-              {((isAdmin && member.userId !== currentUserId) || 
-                (isModerator && member.role !== 'ADMIN' && member.role !== 'MODERATOR' && member.userId !== currentUserId)) && (
+              {((isAdmin && currentUserId && member.userId !== currentUserId) || 
+                (isModerator && member.role === 'MEMBER')) && (
                 <DropdownMenu>
                   <DropdownMenuTrigger className="focus:outline-none">
-                  <MoreHorizontal className="h-5 w-5 text-gray-500" />
+                    <MoreHorizontal className="h-5 w-5 text-gray-500" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                    {isAdmin && member.role === 'MODERATOR' && (
-                      <DropdownMenuItem onClick={() => handleDemoteToMember(member.id)}>
-                        Demote to Member
-                      </DropdownMenuItem>
+                    {isAdmin && member.role !== 'ADMIN' && (
+                      <>
+                        {member.role === 'MEMBER' ? (
+                          <DropdownMenuItem onClick={() => handlePromoteToModerator(member.id)}>
+                            Promote to Moderator
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem onClick={() => handleDemoteToMember(member.id)}>
+                            Demote to Member
+                          </DropdownMenuItem>
+                        )}
+                      </>
                     )}
-                    {isAdmin && member.role === 'MEMBER' && (
-                      <DropdownMenuItem onClick={() => handlePromoteToModerator(member.id)}>
-                        Promote to Moderator
-                      </DropdownMenuItem>
-                    )}
-                    {(isAdmin || isModerator) && (
-                      <DropdownMenuItem onClick={() => handleRemoveMember(member.userId)}>
-                        Remove Member
-                      </DropdownMenuItem>
-                    )}
+                    <DropdownMenuItem 
+                      onClick={() => handleRemoveMember(member.userId)}
+                      className="text-red-600"
+                    >
+                      Remove Member
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
@@ -222,7 +229,9 @@ export const MembersTab: React.FC<MembersTabProps> = ({
           ))}
         </div>
       ) : (
-        <div className="text-center text-gray-500 p-6">No members found.</div>
+        <div className="text-center text-gray-500 p-6">
+          No members found
+        </div>
       )}
 
       <InviteUserModal

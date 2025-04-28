@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
+import { getAuthToken } from '@/utils/authUtils';
 
 interface InviteUserModalProps {
   isOpen: boolean;
@@ -21,7 +23,7 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
   const [error, setError] = useState('');
 
   const handleInvite = async () => {
-    if (!email) {
+    if (!email.trim()) {
       setError('Email is required');
       return;
     }
@@ -29,8 +31,8 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:3000/groups/${groupId}/invite`, {
+      const token = getAuthToken();
+      const response = await fetch(`http://localhost:3002/groups/${groupId}/invitations`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -47,34 +49,66 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
       setEmail('');
       onInvite(); // Refresh members list
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong');
+    } catch (err) {
+      console.error('Invitation error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to send invitation');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !loading) {
+      handleInvite();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+    <Dialog open={isOpen} onOpenChange={() => !loading && onClose()}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Invite a user</DialogTitle>
+          <DialogTitle>Invite User to Group</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <Input
-            placeholder="User email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
-          />
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Input
+              placeholder="Enter email address"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={loading}
+              className="w-full"
+            />
+            {error && (
+              <p className="text-sm text-red-500">
+                {error}
+              </p>
+            )}
+          </div>
         </div>
-        <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={onClose} disabled={loading}>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={loading}
+            className="mr-2"
+          >
             Cancel
           </Button>
-          <Button onClick={handleInvite} disabled={loading}>
-            {loading ? 'Inviting...' : 'Send Invite'}
+          <Button
+            onClick={handleInvite}
+            disabled={loading}
+            className="min-w-[100px]"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Sending...
+              </>
+            ) : (
+              'Send Invite'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

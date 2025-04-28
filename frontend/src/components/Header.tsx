@@ -68,7 +68,6 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
     // setSearchTerm(term);
     // setShowSearchHistory(false);
   };
-  
 
   return (
     <header className={`bg-white shadow-sm shadow-gray-500/50 py-2 px-4${className}`}>

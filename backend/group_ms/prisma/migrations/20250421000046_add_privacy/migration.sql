@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `groups` ADD COLUMN `privacy` ENUM('PUBLIC', 'PRIVATE') NOT NULL DEFAULT 'PUBLIC';
