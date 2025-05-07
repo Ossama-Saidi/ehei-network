@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Search {
+  id             Int      @id @default(autoincrement())
+  utilisateurId  Int?
+  terme          String
+  type           SearchType? // Enum
+  resultatId     Int?
+  groupeId       Int?
+  tagId          Int?
+  statut         SearchStatus @default(trouvé)
+  dateRecherche  DateTime @default(now())
+}
+
+// Enum pour le type de recherche
+enum SearchType {
+  utilisateur
+  groupe
+  tag
+  publication
+}
+
+// Enum pour le statut
+enum SearchStatus {
+  trouvé
+  non_trouvé
+}

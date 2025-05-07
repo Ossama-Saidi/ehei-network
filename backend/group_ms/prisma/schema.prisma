@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id          Int      @id @default(autoincrement())
+  publicationId Int    @unique  // Reference to the actual post in publication microservice
+  groupId     Int
+  authorId    Int
+  createdAt   DateTime @default(now())
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@map("posts")
+}
+
+model Group {
+  id                Int                @id @default(autoincrement()) @unique
+  name              String             
+  description       String?
+  bannerUrl         String?
+  status            GroupStatus        @default(ACTIVE)
+  privacy           GroupPrivacy       @default(PUBLIC)  // Add this line
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  createdBy         Int                // Ensure this references a user
+  members           Member[]
+  membershipRequests MembershipRequest[]
+  blockedUsers      BlockedUser[]
+  invitations       Invitation[]
+  posts             Post[]             // Add this line
+  
+  @@map("groups")
+}
+
+
+model Member {
+  id        Int      @id @default(autoincrement())
+  userId    Int      
+  groupId   Int
+  joinedAt  DateTime @default(now())
+  role      Role @default(ADMIN)
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade) // Add onDelete behavior
+
+  @@unique([userId, groupId])
+  @@map("members")
+}
+
+model MembershipRequest {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  groupId   Int
+  status    RequestStatus @default(PENDING)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  group     Group    @relation(fields: [groupId], references: [id])
+
+  @@unique([userId, groupId])
+  @@map("membership_requests")
+}
+
+model BlockedUser {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  groupId   Int
+  reason    String?
+  blockedAt DateTime @default(now())
+  group     Group    @relation(fields: [groupId], references: [id])
+
+  @@unique([userId, groupId])
+  @@map("blocked_users")
+}
+
+model Invitation {
+  id        Int           @id @default(autoincrement())
+  userId    Int
+  groupId   Int
+  status    InviteStatus  @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  group     Group         @relation(fields: [groupId], references: [id])
+
+  @@unique([userId, groupId])
+  @@map("invitations")
+}
+
+enum GroupStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum Role {
+  ADMIN
+  MODERATOR  // Added moderator role
+  MEMBER
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum GroupPrivacy {
+  PUBLIC
+  PRIVATE
+}

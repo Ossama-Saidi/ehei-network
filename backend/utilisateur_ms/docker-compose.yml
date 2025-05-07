@@ -1,0 +1,43 @@
+
+services:
+  # Node.js Microservice
+  user-service:
+    build:
+      context: .
+    ports:
+      - "3000:3000" # Map port 3000 to the host
+    env_file:
+      - .env # Use your environment file for DB connection
+    depends_on:
+      - mysql # Ensure MySQL starts before this service
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0 # Use the MySQL 8.0 image
+    container_name: mysql-db
+    ports:
+      - "3306:3306" # Expose MySQL on port 3306
+    environment:
+      #MYSQL_ROOT_PASSWORD: # Set MySQL root password
+      MYSQL_ALLOW_EMPTY_PASSWORD : "yes"
+      MYSQL_DATABASE: ehei_connect # Initial database to create
+      #MYSQL_USER: # Create a custom MySQL user
+      #MYSQL_PASSWORD: # Password for the custom MySQL user
+    volumes:
+      - mysql-data:/var/lib/mysql # Persist MySQL data
+
+  # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin:latest # Use the latest phpMyAdmin image
+    container_name: phpmyadmin
+    ports:
+      - "8080:80" # Expose phpMyAdmin on port 8080
+    environment:
+      PMA_HOST: mysql # Point to the MySQL service
+      PMA_USER: root # Custom MySQL user for phpMyAdmin login
+      PMA_PASSWORD: "" # Password for the custom MySQL user
+    depends_on:
+      - mysql # Ensure MySQL starts before phpMyAdmin
+
+volumes:
+  mysql-data: # Named volume for persisting MySQL data
