@@ -16,6 +16,15 @@ export const getAuthToken = (): string | null => {
   return null;
 };
 
+/**
+ * Vérifie si l'utilisateur connecté a le rôle d'administrateur
+ * @returns {boolean} true si l'utilisateur est un administrateur, false sinon
+ */
+export const isAdmin = (): boolean => {
+  const decodedToken = getDecodedToken();
+  return decodedToken?.role === 'ADMINISTRATEUR';
+};
+
 export const isAuthenticated = (): boolean => {
   return !!getAuthToken();
 };
