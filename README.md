@@ -82,4 +82,4 @@ Le rapport complet du projet est disponible dans ce repo :
 ---
 
 > Ce projet illustre notre capacité à **concevoir**, **développer** et **déployer** une solution complète, modulaire et sécurisée en équipe.
-> Nous sommes ouverts à toutes opportunités de stage ou collaboration technique dans le domaine du **développement web, backend Node.js/NestJS** ou **architecture logicielle**.
+> Nous sommes ouverts à toutes opportunités de stage ou collaboration technique dans le domaine du **développement web, backend **.
