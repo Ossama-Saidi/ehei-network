@@ -71,6 +71,8 @@ La communication interservices repose sur **RabbitMQ** (via événements AMQP), 
 
 Le rapport complet du projet est disponible dans ce repo :
 📎 `Plateforme de Réseau Social.pdf`
+Vidéo de démonstration est aussi disponible dans ce repo: 
+📎 `docs/DémonstrationPFA.mp4`
 📅 Soutenance : 2 mai 2025
 
 ## 📬 Contact
